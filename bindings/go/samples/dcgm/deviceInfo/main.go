@@ -6,7 +6,7 @@ import (
 	"os"
 	"text/template"
 	//"../../../dcgm"
-	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
+  	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 )
 
 const (
@@ -28,7 +28,7 @@ Memory (MHz)           : {{or .Clocks.Memory "N/A"}}
 Power (W)              : {{or .Power "N/A"}}
 CPUAffinity            : {{or .CPUAffinity "N/A"}}
 P2P Available          : {{if not .Topology}}None{{else}}{{range .Topology}}
-			(GPU){{.GPU}} - (BusID){{.BusID}} - {{.Link.PCIPaths}}{{end}}{{end}}
+			(GPU){{.GpuID}} - (BusID){{.BusID}} - {{.Link.PCIPaths}}{{end}}{{end}}
 ---------------------------------------------------------------------
 `
 )
