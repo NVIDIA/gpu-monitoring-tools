@@ -56,7 +56,7 @@ func (l P2PLinkType) PCIPaths() string {
 }
 
 type P2PLink struct {
-	GPU   uint
+	GpuID uint
 	BusID string
 	Link  P2PLinkType
 }
@@ -126,7 +126,7 @@ func getDeviceTopology(gpuid uint) (links []P2PLink, err error) {
 	for i := uint(0); i < uint(topology.numGpus); i++ {
 		gpu := topology.gpuPaths[i].gpuId
 		p2pLink := P2PLink{
-			GPU:   uint(gpu),
+			GpuID: uint(gpu),
 			BusID: busid,
 			Link:  getP2PLink(uint(topology.gpuPaths[i].path)),
 		}
