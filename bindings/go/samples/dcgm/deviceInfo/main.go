@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"text/template"
-
+	//"../../../dcgm"
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 )
 
@@ -28,7 +28,7 @@ Memory (MHz)           : {{or .Clocks.Memory "N/A"}}
 Power (W)              : {{or .Power "N/A"}}
 CPUAffinity            : {{or .CPUAffinity "N/A"}}
 P2P Available          : {{if not .Topology}}None{{else}}{{range .Topology}}
-    GPU{{.GpuId}} - (BusID){{.BusID}} - {{.Link.PCIPaths}}{{end}}{{end}}
+			(GPU){{.GPU}} - (BusID){{.BusID}} - {{.Link.PCIPaths}}{{end}}{{end}}
 ---------------------------------------------------------------------
 `
 )
