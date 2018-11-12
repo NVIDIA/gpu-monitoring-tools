@@ -1,0 +1,39 @@
+apiVersion: v1
+entries:
+  kube-prometheus:
+  - apiVersion: v1
+    created: 2018-11-12T11:43:49.185312639-08:00
+    description: Manifests, dashboards, and alerting rules for end-to-end Kubernetes
+      cluster monitoring.
+    digest: 1a5c3ac631bbc5a41475ace1c02fbf409987cd3b34ecf498a6c192a58acd956f
+    engine: gotpl
+    maintainers:
+    - email: mgoodness@gmail.com
+      name: Michael Goodness
+    - email: gianrubio@gmail.com
+      name: Giancarlo Rubio
+    name: kube-prometheus
+    sources:
+    - https://github.com/coreos/prometheus-operator
+    urls:
+    - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/kube-prometheus-0.0.43.tgz
+    version: 0.0.43
+  prometheus-operator:
+  - apiVersion: v1
+    created: 2018-11-12T11:43:49.186144163-08:00
+    description: Provides easy monitoring definitions for Kubernetes services, and
+      deployment and management of Prometheus instances.
+    digest: 77fc8daddc0544cf90c0686e4c63a8ee085c75a685d974756ae59ffd9de179d9
+    engine: gotpl
+    maintainers:
+    - email: mgoodness@gmail.com
+      name: Michael Goodness
+    - email: gianrubio@gmail.com
+      name: Giancarlo Rubio
+    name: prometheus-operator
+    sources:
+    - https://github.com/coreos/prometheus-operator
+    urls:
+    - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/prometheus-operator-0.0.15.tgz
+    version: 0.0.15
+generated: 2018-11-12T11:43:49.173767664-08:00
