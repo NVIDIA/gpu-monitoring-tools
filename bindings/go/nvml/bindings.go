@@ -330,6 +330,16 @@ func (h handle) deviceGetDecoderUtilization() (*uint, error) {
 	return uintPtr(usage), errorString(r)
 }
 
+func (h handle) deviceGetCudaComputeCapability() (int, int, error) {
+	var major, minor C.int
+
+	r := C.nvmlDeviceGetCudaComputeCapability(h.dev, &major, &minor)
+	if r == C.NVML_ERROR_NOT_SUPPORTED {
+		return 0, 0, nil
+	}
+	return int(major), int(minor), errorString(r)
+}
+
 func (h handle) deviceGetMemoryInfo() (totalMem *uint64, devMem DeviceMemory, err error) {
 	var mem C.nvmlMemory_t
 

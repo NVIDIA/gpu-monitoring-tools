@@ -14,7 +14,8 @@ const (
 Model          : {{or .Model "N/A"}}
 Path           : {{.Path}}
 Power          : {{if .Power}}{{.Power}} W{{else}}N/A{{end}}
-Memory	       : {{if .Memory}}{{.Memory}} MiB{{else}}N/A{{end}}
+Memory         : {{if .Memory}}{{.Memory}} MiB{{else}}N/A{{end}}
+CudaComputeCap : {{if .CudaComputeCapability.Major}}{{.CudaComputeCapability.Major}}.{{.CudaComputeCapability.Minor}}{{else}}N/A{{end}}
 CPU Affinity   : {{if .CPUAffinity}}NUMA node{{.CPUAffinity}}{{else}}N/A{{end}}
 Bus ID         : {{.PCI.BusID}}
 BAR1           : {{if .PCI.BAR1}}{{.PCI.BAR1}} MiB{{else}}N/A{{end}}
