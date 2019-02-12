@@ -1,0 +1,2 @@
+# default rules are in templates/kubernetes.rules.yaml
+# prometheusRules: {}

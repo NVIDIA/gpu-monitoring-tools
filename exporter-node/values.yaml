@@ -1,0 +1,82 @@
+# This is a NVIDIA modified YAML-formatted file.
+# Declares dcgm-exporter variables to be passed into node-exporter templates.
+replicaCount: 1
+
+nodeSelector:
+  hardware-type: NVIDIAGPU
+
+nodeExporter:
+  image:
+    repository: quay.io/prometheus/node-exporter
+    tag: v0.15.2
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    externalPort: 9100
+    containerPort: 9100
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 50Mi
+    requests:
+      cpu: 100m
+      memory: 30Mi
+
+  container:
+    args:
+    - --path.procfs=/host/proc
+    - --path.sysfs=/host/sys
+    - --collector.textfile.directory=/run/prometheus
+
+    volumes:
+    - name: proc
+      hostPath:
+        path: /proc
+    - name: sys
+      hostPath:
+        path: /sys
+
+    volumeMounts:
+    - name: proc
+      mountPath: /host/proc
+      readOnly:  true
+    - name: sys
+      mountPath: /host/sys
+      readOnly: true
+    - name: collector-textfiles
+      mountPath: /run/prometheus
+      readOnly: true
+
+dcgmExporter:
+  image:
+    repository: nvidia/dcgm-exporter
+    tag: 1.4.6
+
+  container:
+    name: nvidia-dcgm-exporter
+
+    securityContext:
+      runAsNonRoot: false
+      runAsUser: 0
+
+    volumes:
+    - name: collector-textfiles
+      emptyDir:
+        medium: Memory
+
+    volumeMounts:
+    - name: collector-textfiles
+      mountPath: /run/prometheus
+
+## Tolerations for use with node taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations:
+- effect: NoSchedule
+  operator: Exists
+
+
+# default rules are in templates/node.rules.yaml
+# prometheusRules: {}

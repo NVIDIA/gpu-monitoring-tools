@@ -1,0 +1,14 @@
+Following changes are made to prometheus-operator helm charts (release-0.18) to enable NVIDIA GPU metrics:
+
+1. exporter-node - The node-exporter daemonset is modified to collect GPU metrics from NVIDIA dcgm-exporter.
+
+Changed files:
+	(i)  exporter-node/values.yaml
+	(ii) templates/daemonset.yaml
+	(iv) templates/service.yaml
+	(v)  templates/NOTES.txt
+
+2. grafana - Some GPU metrics graphs are added to grafana nodes dashboard.
+
+Changed Files:
+	(i) grafana/dashboards/nodes-dashboard.json

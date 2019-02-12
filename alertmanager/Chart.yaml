@@ -1,0 +1,12 @@
+apiVersion: v1
+description: Alertmanager instance created by the CoreOS Prometheus Operator
+engine: gotpl
+maintainers:
+- email: mgoodness@gmail.com
+  name: Michael Goodness
+- email: gianrubio@gmail.com
+  name: Giancarlo Rubio
+name: alertmanager
+sources:
+- https://github.com/coreos/prometheus-operator
+version: 0.0.13
