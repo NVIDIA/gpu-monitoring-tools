@@ -128,6 +128,36 @@ func (t ProcessType) String() string {
 	return typ
 }
 
+type BrandType uint
+
+const (
+	BrandUnknown BrandType = iota
+	BrandQuadro
+	BrandTesla
+	BrandNvs
+	BrandGrid
+	BrandGeforce
+	BrandTitan
+)
+
+func (t BrandType) String() string {
+	switch t {
+	case BrandQuadro:
+		return "Quadro"
+	case BrandTesla:
+		return "Tesla"
+	case BrandNvs:
+		return "NVS"
+	case BrandGrid:
+		return "GRID"
+	case BrandGeforce:
+		return "GeForce"
+	case BrandTitan:
+		return "TITAN"
+	}
+	return "Unknown"
+}
+
 type P2PLinkType uint
 
 const (
@@ -181,6 +211,7 @@ type Device struct {
 	UUID        string
 	Path        string
 	Model       *string
+	Brand       string
 	Power       *uint
 	Memory      *uint64
 	CPUAffinity *uint
@@ -305,6 +336,8 @@ func NewDevice(idx uint) (device *Device, err error) {
 	assert(err)
 	model, err := h.deviceGetName()
 	assert(err)
+	brand, err := h.deviceGetBrand()
+	assert(err)
 	uuid, err := h.deviceGetUUID()
 	assert(err)
 	minor, err := h.deviceGetMinorNumber()
@@ -336,6 +369,7 @@ func NewDevice(idx uint) (device *Device, err error) {
 		UUID:        *uuid,
 		Path:        path,
 		Model:       model,
+		Brand:       BrandType(*brand).String(),
 		Power:       power,
 		Memory:      totalMem,
 		CPUAffinity: &node,

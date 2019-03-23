@@ -92,6 +92,9 @@ func TestDeviceInfo(t *testing.T) {
 			case "name":
 				msg = "Device model"
 				output = *device.Model
+			case "brand":
+				msg = "Device brand"
+				output = device.Brand
 			case "pci.bus_id":
 				msg = "Device bus id"
 				output = device.PCI.BusID

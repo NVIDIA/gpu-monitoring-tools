@@ -15,6 +15,7 @@ Driver Version : 384.111
 GPU            : 0
 UUID           : GPU-34e8d7ba-0e4d-ac00-6852-695d5d404f51
 Model          : GeForce GTX 980
+Brand          : GeForce
 Path           : /dev/nvidia0
 Power          : 180 W
 CPU Affinity   : NUMA node0
@@ -28,6 +29,7 @@ P2P Available  : None
 GPU            : 1
 UUID           : GPU-8d3b966d-2248-c3f4-1784-49851a1d02b3
 Model          : GeForce GTX TITAN
+Brand          : GeForce
 Path           : /dev/nvidia1
 Power          : 250 W
 CPU Affinity   : NUMA node0

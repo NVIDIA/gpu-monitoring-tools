@@ -12,6 +12,7 @@ import (
 const (
 	DEVICEINFO = `UUID           : {{.UUID}}
 Model          : {{or .Model "N/A"}}
+Brand          : {{or .Brand "N/A"}}
 Path           : {{.Path}}
 Power          : {{if .Power}}{{.Power}} W{{else}}N/A{{end}}
 Memory	       : {{if .Memory}}{{.Memory}} MiB{{else}}N/A{{end}}

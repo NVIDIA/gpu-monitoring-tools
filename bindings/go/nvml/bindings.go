@@ -197,6 +197,16 @@ func (h handle) deviceGetName() (*string, error) {
 	return stringPtr(&name[0]), errorString(r)
 }
 
+func (h handle) deviceGetBrand() (*uint, error) {
+	var brand C.nvmlBrandType_t
+
+	r := C.nvmlDeviceGetBrand(h.dev, &brand)
+	if r == C.NVML_ERROR_NOT_SUPPORTED {
+		return nil, nil
+	}
+	return uintPtr(C.uint(brand)), errorString(r)
+}
+
 func (h handle) deviceGetUUID() (*string, error) {
 	var uuid [szUUID]C.char
 
