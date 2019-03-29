@@ -334,8 +334,8 @@ func (h handle) deviceGetCudaComputeCapability() (int, int, error) {
 	var major, minor C.int
 
 	r := C.nvmlDeviceGetCudaComputeCapability(h.dev, &major, &minor)
-	if r == C.NVML_ERROR_NOT_SUPPORTED {
-		return 0, 0, nil
+	if r != C.NVML_SUCCESS {
+		return 0, 0, errorString(r)
 	}
 	return int(major), int(minor), errorString(r)
 }
