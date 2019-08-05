@@ -41,12 +41,11 @@ func watchAndWriteGPUmetrics() {
 				podMap, err := getDevicePodInfo(socketPath)
 				if err != nil {
 					glog.Error(err)
-					return
+					continue
 				}
 				err = addPodInfoToMetrics(gpuPodMetricsPath, gpuMetrics, gpuPodMetrics, podMap)
 				if err != nil {
 					glog.Error(err)
-					return
 				}
 			}
 
