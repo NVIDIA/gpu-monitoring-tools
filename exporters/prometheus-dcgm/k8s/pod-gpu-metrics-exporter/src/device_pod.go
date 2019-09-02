@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+        //"github.com/golang/glog"
 
 	podresourcesapi "k8s.io/kubernetes/pkg/kubelet/apis/podresources/v1alpha1"
 )
@@ -85,10 +86,17 @@ func addPodInfoToMetrics(dir string, srcFile string, destFile string, deviceToPo
 		// Skip comments and add pod info
 		if string(line[0]) != "#" {
 			uuid := strings.Split(strings.Split(line, ",")[1], "\"")[1]
+                        gpuIndex := strings.Split(strings.Split(strings.Split(line, "{")[1], ",")[0], "\"")[1]
+                        //glog.Infof("addPodInfoToMetrics. uuid=<%s> gpuIndex=<%v>", uuid, gpuIndex)
+                        
 			if pod, exists := deviceToPodMap[uuid]; exists {
-				splitLine := strings.Split(line, "}")
-				line = fmt.Sprintf("%s,pod_name=\"%s\",pod_namespace=\"%s\",container_name=\"%s\"}%s", splitLine[0], pod.name, pod.namespace, pod.container, splitLine[1])
+				//glog.Infof("addPodInfoToMetrics. added pod name from uuid")
+ 				line = addPodInfoToLine(line, pod)
 			}
+                        if pod, exists := deviceToPodMap["nvidia" + string(gpuIndex)]; exists {
+				//glog.Infof("addPodInfoToMetrics. added pod name from gpu index")
+                                line = addPodInfoToLine(line, pod)
+                        }
 		}
 
 		_, err = tmpF.WriteString(line)
@@ -96,4 +104,10 @@ func addPodInfoToMetrics(dir string, srcFile string, destFile string, deviceToPo
 			return fmt.Errorf("error writing to %s: %v", tmpFname, err)
 		}
 	}
+}
+
+func addPodInfoToLine(originalLine string, pod devicePodInfo) string {
+	splitOriginalLine := strings.Split(originalLine, "}")
+        newLineWithPodName := fmt.Sprintf("%s,pod_name=\"%s\",pod_namespace=\"%s\",container_name=\"%s\"}%s", splitOriginalLine[0], pod.name, pod.namespace, pod.container, splitOriginalLine[1])
+        return newLineWithPodName
 }

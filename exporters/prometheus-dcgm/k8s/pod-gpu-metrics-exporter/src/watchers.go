@@ -39,6 +39,7 @@ func watchAndWriteGPUmetrics() {
 			if event.Name == gpuMetrics && event.Op&fsnotify.Create == fsnotify.Create {
 				glog.V(1).Infof("inotify: %s created, now adding device pod information.", gpuMetrics)
 				podMap, err := getDevicePodInfo(socketPath)
+     				//glog.Infof("createDevicePodMap. podMap=<%s>", podMap)
 				if err != nil {
 					glog.Error(err)
 					return
