@@ -33,7 +33,7 @@ func main() {
 	server := newHttpServer(port)
 	defer stopHttp(server)
 
-	// expose metrics to localhost:9400/gpu/metrics
+	// expose metrics to localhost:9400/metrics
 	go func() {
 		glog.V(1).Infof("Running http server on localhost%s", port)
 		startHttp(server)
