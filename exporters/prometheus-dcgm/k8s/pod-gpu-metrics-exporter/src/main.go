@@ -3,17 +3,23 @@ package main
 import (
 	"flag"
 	"syscall"
-
+	"os"
 	"github.com/golang/glog"
 )
 
-// http port serving metrics
-const port = ":9400"
-
-// res: curl localhost:9400/gpu/metrics
+// res: curl localhost:9400/metrics
 func main() {
 	defer glog.Flush()
 	flag.Parse()
+
+	glog.Info("Starting service...")
+
+	// http port serving metrics
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "9400"
+	}
+	port = ":" + port 
 
 	glog.Info("Starting OS watcher.")
 	sigs := sigWatcher(syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
