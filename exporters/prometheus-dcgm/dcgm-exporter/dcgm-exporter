@@ -38,6 +38,12 @@ if [ "${HOST_ENGINE}" = "yes" ]; then
     nv-hostengine 2> /dev/null
 fi
 
+
+until nvidia-smi
+do
+  echo "nvidia-smi is not up yet"
+done
+
 echo "Collecting metrics at ${OUTPUT_FILE} every ${COLLECT_INTERVAL_MS}ms..."
 
 dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -e \
