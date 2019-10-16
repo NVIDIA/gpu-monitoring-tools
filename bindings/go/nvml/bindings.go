@@ -201,6 +201,20 @@ func deviceGetTopologyCommonAncestor(h1, h2 handle) (*uint, error) {
 	return uintPtr(C.uint(level)), errorString(r)
 }
 
+func (h handle) deviceGetCudaComputeCapability() (*int, *int, error) {
+	var major, minor C.int
+
+	r := C.nvmlDeviceGetCudaComputeCapability(h.dev, &major, &minor)
+	if r != C.NVML_SUCCESS {
+		return nil, nil, errorString(r)
+	}
+
+	intMajor := int(major)
+	intMinor := int(minor)
+
+	return &intMajor, &intMinor, errorString(r)
+}
+
 func (h handle) deviceGetName() (*string, error) {
 	var name [szName]C.char
 
@@ -283,7 +297,7 @@ func (h handle) deviceGetAllNvLinkRemotePciInfo() ([]*string, error) {
 		}
 
 		if state == nil {
-			return nil, nil
+			continue
 		}
 
 		if *state == C.NVML_FEATURE_ENABLED {
@@ -293,7 +307,7 @@ func (h handle) deviceGetAllNvLinkRemotePciInfo() ([]*string, error) {
 			}
 
 			if pci == nil {
-				return nil, nil
+				continue
 			}
 
 			busIds = append(busIds, pci)
