@@ -55,7 +55,7 @@ func watchAndWriteGPUmetrics() {
 			glog.Errorf("inotify: %s", err)
 
 			// exit if there are no events for 20 seconds.
-		case <-time.After(time.Second * 20):
+		case <-time.After(time.Minute * 10):
 			glog.Fatal("No events received. Make sure \"dcgm-exporter\" is running")
 			return
 		}

@@ -44,8 +44,10 @@ fi
 
 until nvidia-smi
 do
-  echo "nvidia-smi is not up yet"
+  sleep 1
 done
+
+sleep 5
 
 echo "Collecting metrics at ${OUTPUT_FILE} every ${COLLECT_INTERVAL_MS}ms..."
 
