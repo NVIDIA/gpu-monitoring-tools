@@ -37,8 +37,7 @@ mkdir -p $(dirname ${OUTPUT_FILE})
 trap 'echo "Caught signal, terminating..."' HUP INT QUIT PIPE TERM
 
 if [ "${HOST_ENGINE}" = "yes" ]; then
-    nvsdev=`ls -1 /dev/nvidia-nvswitch* 2> /dev/null`
-    if [ ! -z "${nvsdev}" ]; then
+    if [ -x "$(command -v systemctl)" ] && systemctl is-enabled --quiet nvidia-fabricmanager; then
         echo "Warning: Suppressing $0 -e option."
 	echo "  nvidia-fabricmanager will start nv-hostengine on this platform."
 	HOST_ENGINE=no
