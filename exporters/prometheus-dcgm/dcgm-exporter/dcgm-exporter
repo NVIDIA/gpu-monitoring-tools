@@ -55,7 +55,7 @@ if [ "${DCP_METRICS}" = "yes" ]; then
 fi
 
 dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -e \
-"54,"\
+"50,54,"\
 "100,101,"\
 "140,150,155,156,"\
 "200,201,202,203,204,206,207,"\
@@ -72,15 +72,26 @@ function metric(name, type, help, value) {
         if (gpu == 0) {
             printf "# HELP dcgm_%s %s\n", name, help > out".swp"
             printf "# TYPE dcgm_%s %s\n", name, type > out".swp"
+
+            if (name == "device_count") {
+                printf "dcgm_%s %s\n", name, value > out".swp"
+            }
         }
-        printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, value > out".swp"
+
+        if (name != "device_count") {
+            printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\",gpu_type=\"%s\"} %s\n", name, gpu, uuid, gpu_type, value > out".swp"
+        }
     }
 }
 (NF && NR > 2 && !($1 ~ "^#" || $1 ~ "^Id")) {
     # Labels
     i = 1
     gpu = $(i++)                                                                                                      # field 0 (implicit)
+    gpu_type = $(i++)"-"$(i++)                                                                                        # field 50
     uuid = $(i++)                                                                                                     # field 54
+
+    # Device count metric
+    metric("device_count", "gauge", "Device count.", ngpus)                                                           # device count
 
     # Clocks
     metric("sm_clock", "gauge", "SM clock frequency (in MHz).", $(i++))                                               # field 100
