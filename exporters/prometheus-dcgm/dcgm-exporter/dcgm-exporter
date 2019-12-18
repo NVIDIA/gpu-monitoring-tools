@@ -56,19 +56,20 @@ if [ "${DCP_METRICS}" = "yes" ]; then
     DCP_FIELDS=",1001,1002,1003,1004,1005"
 fi
 
+# sed is used inorder to remove leading spaces
 dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -e \
-"54,"\
+"50,54,"\
 "100,101,"\
 "140,150,155,156,"\
 "200,201,202,203,204,206,207,"\
 "230,240,241,242,243,244,245,"\
-"251,252,"\
+"250,251,252,"\
 "310,311,312,313,"\
 "390,391,392,"\
 "409,419,429,439,449"\
 "${DCP_FIELDS}" | \
-awk -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" '
-
+sed 's/^[ \t]*//;s/[ \t]*$//' | \
+awk -F '  +' -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" '
 function metric(name, type, help, value) {
     if (value !~ "N/A") {
         if (gpu == 0) {
@@ -78,11 +79,16 @@ function metric(name, type, help, value) {
         printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, value > out".swp"
     }
 }
+function info_metric() {
+    printf "dcgm_gpu_info{gpu=\"%s\",uuid=\"%s\",gpu_type=\"%s\"} 1\n", gpu, uuid, gpu_type > out".swp"
+}
 (NF && NR > 2 && !($1 ~ "^#" || $1 ~ "^Id")) {
     # Labels
     i = 1
     gpu = $(i++)                                                                                                      # field 0 (implicit)
+    gpu_type = $(i++)                                                                                                 # field 50
     uuid = $(i++)                                                                                                     # field 54
+    info_metric()
 
     # Clocks
     metric("sm_clock", "gauge", "SM clock frequency (in MHz).", $(i++))                                               # field 100
@@ -118,6 +124,7 @@ function metric(name, type, help, value) {
     #metric("app_clock_violation", "counter", "Total throttling duration (in us).", $(i++))                            # field 246 TODO
 
     # Memory usage
+    metric("fb_total", "gauge", "Framebuffer memory free (in MiB).", $(i++))                                           # field 251
     metric("fb_free", "gauge", "Framebuffer memory free (in MiB).", $(i++))                                           # field 251
     metric("fb_used", "gauge", "Framebuffer memory used (in MiB).", $(i++))                                           # field 252
 
