@@ -44,12 +44,34 @@ fi
 
 until nvidia-smi
 do
-  sleep 1
+  sleep 2
 done
 
 sleep 5
 
-echo "Collecting metrics at ${OUTPUT_FILE} every ${COLLECT_INTERVAL_MS}ms..."
+node="${NODE_NAME}"
+node=$(echo "${node//-/_}")
+indices=-1
+
+if [ -v "${node}" ]; then
+  [[ -z $( eval "echo \$$node" ) ]] && indices='-1' || indices=$( eval "echo \$$node" )
+fi
+
+echo "Collecting metrics at ${OUTPUT_FILE} every ${COLLECT_INTERVAL_MS}ms from GPUs:${indices} (-1 means all GPUs), on node: ${node}."
+
+indices_array=$(echo $indices | tr "," "\n")
+min=9999
+
+for index in $indices_array
+do
+  if [ "${index}" -lt "${min}" ]; then
+    min="${index}"
+  fi
+done
+
+if [ "${min}" -lt 0 ]; then
+  min=0
+fi
 
 if [ "${DCP_METRICS}" = "yes" ]; then
     echo "Collecting DCP metrics as well."
@@ -57,7 +79,7 @@ if [ "${DCP_METRICS}" = "yes" ]; then
 fi
 
 # sed is used inorder to remove leading spaces
-dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -e \
+dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -i "${indices}" -e \
 "50,54,"\
 "100,101,"\
 "140,150,155,156,"\
@@ -69,10 +91,10 @@ dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -e \
 "409,419,429,439,449"\
 "${DCP_FIELDS}" | \
 sed 's/^[ \t]*//;s/[ \t]*$//' | \
-awk -F '  +' -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" '
+awk -F '  +' -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" -v "min_gpu=${min}" '
 function metric(name, type, help, value) {
     if (value !~ "N/A") {
-        if (gpu == 0) {
+        if (gpu == min_gpu) {
             printf "# HELP dcgm_%s %s\n", name, help > out".swp"
             printf "# TYPE dcgm_%s %s\n", name, type > out".swp"
         }
