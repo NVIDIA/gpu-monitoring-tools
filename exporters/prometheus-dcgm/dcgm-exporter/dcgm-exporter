@@ -49,15 +49,19 @@ done
 
 sleep 5
 
-node="${NODE_NAME}"
-node=$(echo "${node//-/_}")
 indices=-1
+if [ -v NODE_NAME ]; then
+  node="${NODE_NAME}"
+  node=$(echo "${node//-/_}")
 
-if [ -v "${node}" ]; then
-  [[ -z $( eval "echo \$$node" ) ]] && indices='-1' || indices=$( eval "echo \$$node" )
+  if [ -v "${node}" ]; then
+    [[ -z $( eval "echo \$$node" ) ]] && indices='-1' || indices=$( eval "echo \$$node" )
+  fi
+
+  echo "Node: ${node}"
 fi
 
-echo "Collecting metrics at ${OUTPUT_FILE} every ${COLLECT_INTERVAL_MS}ms from GPUs:${indices} (-1 means all GPUs), on node: ${node}."
+echo "Collecting metrics at ${OUTPUT_FILE} every ${COLLECT_INTERVAL_MS}ms from GPUs:${indices} (-1 means all GPUs)."
 
 indices_array=$(echo $indices | tr "," "\n")
 min=9999
