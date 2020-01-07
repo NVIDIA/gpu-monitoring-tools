@@ -82,7 +82,6 @@ if [ "${DCP_METRICS}" = "yes" ]; then
     DCP_FIELDS=",1001,1002,1003,1004,1005"
 fi
 
-# sed is used inorder to remove leading spaces
 dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -i "${indices}" -e \
 "50,54,"\
 "100,101,"\
@@ -94,7 +93,9 @@ dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -i "${indices}" -e \
 "390,391,392,"\
 "409,419,429,439,449"\
 "${DCP_FIELDS}" | \
-sed 's/^[ \t]*//;s/[ \t]*$//' | \
+# The first part of the sed command is inorder to remove leading and trailing spaces: cyberciti.biz/tips/delete-leading-spaces-from-front-of-each-word.html
+# The second part is inorder to add a space after the ID, this patch was added due to an issue we had where there was only one space between the ID and the Type and that caused the awk to fail to seperate between the two.
+sed 's/^[ \t]*//;s/[ \t]*$//;s/[0-9]\+/ & /1;s/^[ \t]*//;s/[ \t]*$//' | \
 awk -F '  +' -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" -v "min_gpu=${min}" '
 function metric(name, type, help, value) {
     if (value !~ "N/A") {
@@ -150,7 +151,7 @@ function info_metric() {
     #metric("app_clock_violation", "counter", "Total throttling duration (in us).", $(i++))                            # field 246 TODO
 
     # Memory usage
-    metric("fb_total", "gauge", "Framebuffer memory free (in MiB).", $(i++))                                           # field 251
+    metric("fb_total", "gauge", "Framebuffer memory free (in MiB).", $(i++))                                          # field 250
     metric("fb_free", "gauge", "Framebuffer memory free (in MiB).", $(i++))                                           # field 251
     metric("fb_used", "gauge", "Framebuffer memory used (in MiB).", $(i++))                                           # field 252
 
