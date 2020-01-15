@@ -83,7 +83,7 @@ if [ "${DCP_METRICS}" = "yes" ]; then
 fi
 
 dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -i "${indices}" -e \
-"50,54,"\
+"54,"\
 "100,101,"\
 "140,150,155,156,"\
 "200,201,202,203,204,206,207,"\
@@ -93,10 +93,7 @@ dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -i "${indices}" -e \
 "390,391,392,"\
 "409,419,429,439,449"\
 "${DCP_FIELDS}" | \
-# The first part of the sed command is inorder to remove leading and trailing spaces: cyberciti.biz/tips/delete-leading-spaces-from-front-of-each-word.html
-# The second part is inorder to add a space after the ID, this patch was added due to an issue we had where there was only one space between the ID and the Type and that caused the awk to fail to seperate between the two.
-sed 's/^[ \t]*//;s/[ \t]*$//;s/[0-9]\+/ & /1;s/^[ \t]*//;s/[ \t]*$//' | \
-awk -F '  +' -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" -v "min_gpu=${min}" '
+awk  -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" -v "min_gpu=${min}" '
 function metric(name, type, help, value) {
     if (value !~ "N/A") {
         if (gpu == min_gpu) {
@@ -106,16 +103,11 @@ function metric(name, type, help, value) {
         printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, value > out".swp"
     }
 }
-function info_metric() {
-    printf "dcgm_gpu_info{gpu=\"%s\",uuid=\"%s\",gpu_type=\"%s\"} 1\n", gpu, uuid, gpu_type > out".swp"
-}
 (NF && NR > 2 && !($1 ~ "^#" || $1 ~ "^Id")) {
     # Labels
     i = 1
     gpu = $(i++)                                                                                                      # field 0 (implicit)
-    gpu_type = $(i++)                                                                                                 # field 50
     uuid = $(i++)                                                                                                     # field 54
-    info_metric()
 
     # Clocks
     metric("sm_clock", "gauge", "SM clock frequency (in MHz).", $(i++))                                               # field 100
