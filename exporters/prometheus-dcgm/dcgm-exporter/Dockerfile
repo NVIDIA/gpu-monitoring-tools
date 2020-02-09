@@ -11,7 +11,7 @@ RUN wget --no-check-certificate https://developer.download.nvidia.com/compute/re
     dpkg -i datacenter-gpu-manager_*.deb && \
     rm -f datacenter-gpu-manager_*.deb
 
-COPY dcgm-exporter /usr/local/bin
+COPY exporters/prometheus-dcgm/dcgm-exporter/dcgm-exporter /usr/local/bin
 
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES all
