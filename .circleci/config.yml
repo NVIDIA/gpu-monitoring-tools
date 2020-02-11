@@ -36,8 +36,6 @@ jobs:
             docker build -t runai/dcgm-exporter-staging:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
             docker push runai/dcgm-exporter-staging:$TAG
 
-      - test_installkit
-
   deploy-pod-gpu-metrics-exporter-staging:
     docker:
       - image: circleci/golang:1.11
@@ -65,8 +63,6 @@ jobs:
             TAG=1.0.0
             docker build -t runai/dcgm-exporter-production:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
             docker push runai/dcgm-exporter-production:$TAG
-
-      - test_installkit
 
   deploy-pod-gpu-metrics-exporter-production:
     docker:
