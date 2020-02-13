@@ -40,13 +40,14 @@ func watchAndWriteGPUmetrics() {
 				glog.V(1).Infof("inotify: %s created, now adding device pod information.", gpuMetrics)
 				podMap, err := getDevicePodInfo(socketPath)
 				if err != nil {
+					// We just log an error and ignore it, as we need to monitor device status
+					// FIXME the error can be recovered
 					glog.Error(err)
-					return
+					podMap = make(map[string]devicePodInfo)
 				}
 				err = addPodInfoToMetrics(gpuPodMetricsPath, gpuMetrics, gpuPodMetrics, podMap)
 				if err != nil {
 					glog.Error(err)
-					return
 				}
 			}
 
