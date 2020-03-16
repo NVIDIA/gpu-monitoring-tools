@@ -2,14 +2,12 @@ version: 2.1
 commands:
   pre_docker_commands:
     steps:
-      - checkout
-
       - setup_remote_docker:
           docker_layer_caching: true
 
       - run:
           name: "Docker login"
-          command: docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASS"
+          command: cat my.json | docker login -u _json_key --password-stdin https://gcr.io
 
   test_installkit:
     steps:
@@ -25,57 +23,77 @@ commands:
 jobs:
   deploy-dcgm-exporter-staging:
     docker:
-      - image: circleci/node:4.8.2
+      - image: google/cloud-sdk
     steps:
+      - checkout
+      - run:
+          name: "Extract gcloud private key to file"
+          command: echo "$STAGING_GCLOUD_SERVICE_JSON_CONTENT" | base64 -d > ./my.json
+
       - pre_docker_commands
 
       - run:
           name: "Docker build and push"
           command: |
             TAG=1.0.0
-            docker build -t runai/dcgm-exporter-staging:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
-            docker push runai/dcgm-exporter-staging:$TAG
+            docker build -t gcr.io/run-ai-staging/dcgm-exporter:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
+            docker push gcr.io/run-ai-staging/dcgm-exporter:$TAG
 
   deploy-pod-gpu-metrics-exporter-staging:
     docker:
-      - image: circleci/golang:1.11
+      - image: google/cloud-sdk
     steps:
+      - checkout
+      - run:
+          name: "Extract gcloud private key to file"
+          command: echo "$STAGING_GCLOUD_SERVICE_JSON_CONTENT" | base64 -d > ./my.json
+
       - pre_docker_commands
 
       - run:
           name: "Docker build and push"
           command: |
             TAG=1.0.0
-            docker build -t runai/pod-gpu-metrics-exporter-staging:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
-            docker push runai/pod-gpu-metrics-exporter-staging:$TAG
+            docker build -t gcr.io/run-ai-staging/pod-gpu-metrics-exporter:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
+            docker push gcr.io/run-ai-staging/pod-gpu-metrics-exporter:$TAG
 
       - test_installkit
 
   deploy-dcgm-exporter-production:
     docker:
-      - image: circleci/node:4.8.2
+      - image: google/cloud-sdk
     steps:
+      - checkout
+      - run:
+          name: "Extract gcloud private key to file"
+          command: echo "$PRODUCTION_GCLOUD_SERVICE_JSON_CONTENT" | base64 -d > ./my.json
+
       - pre_docker_commands
 
       - run:
           name: "Docker build and push"
           command: |
             TAG=1.0.0
-            docker build -t runai/dcgm-exporter-production:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
-            docker push runai/dcgm-exporter-production:$TAG
+            docker build -t gcr.io/run-ai-prod/dcgm-exporter:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
+            docker push gcr.io/run-ai-prod/dcgm-exporter:$TAG
 
   deploy-pod-gpu-metrics-exporter-production:
     docker:
-      - image: circleci/golang:1.11
+      - image: google/cloud-sdk
     steps:
+      - checkout
+      - run:
+          name: "Extract gcloud private key to file"
+          command: echo "$PRODUCTION_GCLOUD_SERVICE_JSON_CONTENT" | base64 -d > ./my.json
+
       - pre_docker_commands
       
       - run:
           name: "Docker build and push"
           command: |
             TAG=1.0.0
-            docker build -t runai/pod-gpu-metrics-exporter-production:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
-            docker push runai/pod-gpu-metrics-exporter-production:$TAG
+            docker build -t gcr.io/run-ai-prod/pod-gpu-metrics-exporter:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
+            docker push gcr.io/run-ai-prod/pod-gpu-metrics-exporter:$TAG
 
       - test_installkit
 workflows:
