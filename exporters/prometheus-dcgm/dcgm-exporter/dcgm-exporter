@@ -93,14 +93,22 @@ dcgmi dmon -d "${COLLECT_INTERVAL_MS}" -i "${indices}" -e \
 "390,391,392,"\
 "409,419,429,439,449"\
 "${DCP_FIELDS}" | \
-awk  -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" -v "min_gpu=${min}" '
+gawk  -v "dcp=${DCP_METRICS}" -v "out=${OUTPUT_FILE}" -v "ngpus=$(nvidia-smi -L | wc -l)" -v "min_gpu=${min}" '
 function metric(name, type, help, value) {
     if (value !~ "N/A") {
         if (gpu == min_gpu) {
             printf "# HELP dcgm_%s %s\n", name, help > out".swp"
             printf "# TYPE dcgm_%s %s\n", name, type > out".swp"
         }
-        printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, value > out".swp"
+
+        if (name == "last_idle_time") {
+            if ((gpu in idleTimes) == 0 || value < 2) {
+                idleTimes[gpu] = systime()
+            }
+            printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, idleTimes[gpu] > out".swp"
+        }
+        else
+            printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, value > out".swp"
     }
 }
 (NF && NR > 2 && !($1 ~ "^#" || $1 ~ "^Id")) {
@@ -127,7 +135,9 @@ function metric(name, type, help, value) {
     metric("pcie_replay_counter", "counter", "Total number of PCIe retries.", $(i++))                                 # field 202
 
     # Utilization (the sample period varies depending on the product)
-    metric("gpu_utilization", "gauge", "GPU utilization (in %).", $(i++))                                             # field 203
+    utilization = $(i++)                                                                                              # field 203
+    metric("gpu_utilization", "gauge", "GPU utilization (in %).", utilization)
+    metric("last_idle_time", "gauge", "Timestamp of last time GPU utilization was 2% or less.", utilization)
     metric("mem_copy_utilization", "gauge", "Memory utilization (in %).", $(i++))                                     # field 204
     metric("enc_utilization", "gauge", "Encoder utilization (in %).", $(i++))                                         # field 206
     metric("dec_utilization", "gauge", "Decoder utilization (in %).", $(i++))                                         # field 207

@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 
 ARG DCGM_VERSION=1.7.1
 
-RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+RUN apt-get update && apt-get install -y gawk && apt-get install -y --no-install-recommends libgomp1 \
     wget && \
     rm -rf /var/lib/apt/lists/*
 	
