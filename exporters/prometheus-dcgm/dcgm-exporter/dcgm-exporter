@@ -101,11 +101,11 @@ function metric(name, type, help, value) {
             printf "# TYPE dcgm_%s %s\n", name, type > out".swp"
         }
 
-        if (name == "last_idle_time") {
-            if ((gpu in idleTimes) == 0 || value < 2) {
-                idleTimes[gpu] = systime()
+        if (name == "gpu_last_not_idle_time") {
+            if ((gpu in notIdleTimes) == 0 || value > 2) {
+                notIdleTimes[gpu] = systime()
             }
-            printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, idleTimes[gpu] > out".swp"
+            printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, notIdleTimes[gpu] > out".swp"
         }
         else
             printf "dcgm_%s{gpu=\"%s\",uuid=\"%s\"} %s\n", name, gpu, uuid, value > out".swp"
@@ -137,7 +137,7 @@ function metric(name, type, help, value) {
     # Utilization (the sample period varies depending on the product)
     utilization = $(i++)                                                                                              # field 203
     metric("gpu_utilization", "gauge", "GPU utilization (in %).", utilization)
-    metric("last_idle_time", "gauge", "Timestamp of last time GPU utilization was 2% or less.", utilization)
+    metric("gpu_last_not_idle_time", "gauge", "Timestamp of last time GPU utilization was 2% or less.", utilization)
     metric("mem_copy_utilization", "gauge", "Memory utilization (in %).", $(i++))                                     # field 204
     metric("enc_utilization", "gauge", "Encoder utilization (in %).", $(i++))                                         # field 206
     metric("dec_utilization", "gauge", "Decoder utilization (in %).", $(i++))                                         # field 207
