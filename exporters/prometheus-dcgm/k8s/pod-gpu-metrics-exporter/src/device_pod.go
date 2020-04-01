@@ -91,6 +91,10 @@ func addPodInfoToMetrics(dir string, srcFile string, destFile string, deviceToPo
 			}
 		}
 
+		if strings.Split(line, "{")[0] == "dcgm_xid_errors" {
+			processHealthMetric(line, tmpF)
+		}
+
 		_, err = tmpF.WriteString(line)
 		if err != nil {
 			return fmt.Errorf("error writing to %s: %v", tmpFname, err)
