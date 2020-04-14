@@ -1,0 +1,4 @@
+github.com/NVIDIA/gpu-monitoring-tools v0.0.0-20200403082939-e5b04ac17c03 h1:pUHrbsxr7G1nE+w4wezGlSHa1pV3oUxOMROzeX+1A1c=
+github.com/NVIDIA/gpu-monitoring-tools v0.0.0-20200403082939-e5b04ac17c03/go.mod h1:nMOvShGpWaf0bXwXmeu4k+O4uziuaEI8pWzIj3BUrOA=
+github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=
+github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
