@@ -16,6 +16,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: {{ include "dcgm-exporter.fullname" . }}
+  namespace: {{ .Values.namespace }}
   labels:
     {{- include "dcgm-exporter.labels" . | nindent 4 }}
     app.kubernetes.io/component: "dcgm-exporter"

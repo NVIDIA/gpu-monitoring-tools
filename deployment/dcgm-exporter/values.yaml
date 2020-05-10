@@ -17,6 +17,8 @@ image:
   tag: 1.7.2
   pullPolicy: IfNotPresent
 
+namespace: kube-system
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
