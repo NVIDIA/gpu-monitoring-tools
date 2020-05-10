@@ -58,9 +58,12 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DCGM_EXPORTER_PORT
+              value: {{ .Values.service.port | quote }}
           ports:
             - name: "metrics"
-              containerPort: 9400
+              containerPort: {{ .Values.service.port }}
           volumeMounts:
             - name: "pod-gpu-resources"
               readOnly: true
@@ -68,13 +71,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 9400
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 5
             periodSeconds: 5
           readinessProbe:
             httpGet:
               path: /health
-              port: 9400
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

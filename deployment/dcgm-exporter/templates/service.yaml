@@ -24,7 +24,7 @@ spec:
   ports:
     - name: "metrics"
       port: {{ .Values.service.port }}
-      targetPort: 9400
+      targetPort: {{ .Values.service.port }}
       protocol: TCP
   selector:
     {{- include "dcgm-exporter.selectorLabels" . | nindent 4 }}
