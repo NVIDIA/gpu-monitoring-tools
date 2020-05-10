@@ -69,6 +69,8 @@ spec:
           env:
             - name: DCGM_EXPORTER_PORT
               value: {{ .Values.service.port | quote }}
+            - name: DCGM_EXPORTER_KUBERNETES
+              value: {{ .Values.mapPodsMetrics | quote }}
           ports:
             - name: "metrics"
               containerPort: {{ .Values.service.port }}
@@ -89,8 +91,3 @@ spec:
             initialDelaySeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-
-    {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
