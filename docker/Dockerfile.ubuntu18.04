@@ -23,7 +23,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV NVIDIA_VISIBLE_DEVICES=all
 
-RUN useradd dcgm-exporter
-USER dcgm-exporter
+USER root
 
 ENTRYPOINT ["/usr/bin/dcgm-exporter"]
