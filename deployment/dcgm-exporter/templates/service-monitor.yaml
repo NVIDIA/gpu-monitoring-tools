@@ -34,12 +34,12 @@ spec:
   namespaceSelector:
     matchNames:
 {{- if .Values.namespace }}
-      - "{{ .Values.namespace }}"
+    - "{{ .Values.namespace }}"
 {{ else }}
-      - "{{ .Release.Namespace }}"
+    - "{{ .Release.Namespace }}"
 {{- end }}
   endpoints:
-    - port: "metrics"
-      path: "/metrics"
-      interval: "{{ .Values.serviceMonitor.interval }}"
+  - port: "metrics"
+    path: "/metrics"
+    interval: "{{ .Values.serviceMonitor.interval }}"
 {{- end -}}
