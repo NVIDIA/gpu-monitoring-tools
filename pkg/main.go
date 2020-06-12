@@ -32,6 +32,7 @@ var (
 
 	CLIFieldsFile      = "collectors"
 	CLIPort            = "port"
+	CLIAddress         = "address"
 	CLICollectInterval = "collect-interval"
 	CLIKubernetes      = "kubernetes"
 )
@@ -56,6 +57,13 @@ func main() {
 			Value:   9400,
 			Usage:   "Port",
 			EnvVars: []string{"DCGM_EXPORTER_LISTEN"},
+		},
+		&cli.StringFlag{
+			Name:    CLIAddress,
+			Aliases: []string{"a"},
+			Value:   "",
+			Usage:   "Address",
+			EnvVars: []string{"DCGM_EXPORTER_LISTEN_ADDRESS"},
 		},
 		&cli.IntFlag{
 			Name:    CLICollectInterval,
@@ -142,6 +150,7 @@ func contextToConfig(c *cli.Context) *Config {
 	return &Config{
 		CollectorsFile:  c.String(CLIFieldsFile),
 		Port:            c.Int(CLIPort),
+		Address:         c.String(CLIAddress),
 		CollectInterval: c.Int(CLICollectInterval),
 		Kubernetes:      c.Bool(CLIKubernetes),
 	}

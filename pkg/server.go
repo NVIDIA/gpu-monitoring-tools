@@ -29,9 +29,15 @@ import (
 
 func NewMetricsServer(c *Config, metrics chan string) (*MetricsServer, func(), error) {
 	router := mux.NewRouter()
+
+	addr := c.Address
+	if addr == "" {
+		addr = fmt.Sprintf(":%d", c.Port)
+	}
+
 	serverv1 := &MetricsServer{
 		server: http.Server{
-			Addr:         fmt.Sprintf(":%d", c.Port),
+			Addr:         addr,
 			Handler:      router,
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 10 * time.Second,
