@@ -35,7 +35,7 @@ jobs:
       - run:
           name: "Docker build and push"
           command: |
-            TAG=1.0.0
+            TAG=latest
             docker build -t gcr.io/run-ai-staging/dcgm-exporter:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
             docker push gcr.io/run-ai-staging/dcgm-exporter:$TAG
 
@@ -53,9 +53,10 @@ jobs:
       - run:
           name: "Docker build and push"
           command: |
-            TAG=1.0.0
+            TAG=latest
             docker build -t gcr.io/run-ai-staging/pod-gpu-metrics-exporter:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
             docker push gcr.io/run-ai-staging/pod-gpu-metrics-exporter:$TAG
+
 
       - test_installkit
 
@@ -95,7 +96,6 @@ jobs:
             docker build -t gcr.io/run-ai-prod/pod-gpu-metrics-exporter:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
             docker push gcr.io/run-ai-prod/pod-gpu-metrics-exporter:$TAG
 
-      - test_installkit
 workflows:
   version: 2
   build_and_deploy:
