@@ -20,8 +20,25 @@ commands:
                 "https://circleci.com/api/v1.1/project/github/run-ai/installkit-customer/build?circle-token=$INSTALLKIT_TOKEN"
 
             printf "\n\nFollow the progress of the build on: https://circleci.com/gh/run-ai/installkit-customer/tree/$CIRCLE_BRANCH"
+
+  update_version_in_installkit:
+    steps:
+      - run:
+          name: Git Commands
+          command: |
+            TAG=${CIRCLE_TAG/v/''}
+            echo "Updating gpu-metrics-exporter new version number $TAG in installkit..."
+            cd ~
+            git config --global user.name "circleci-runai"
+            git config --global user.email "circleci@run.ai"
+            git clone https://github.com/run-ai/installkit-customer.git
+            cd installkit-customer/subcharts/gpu-metrics-exporter
+            sed -i "0,/^\([[:space:]]*tag: *\).*/s//\1$TAG/" values.yaml
+            git add values.yaml
+            git commit -m "updated gpu-metrics-exporter production version to $TAG [skip ci]"
+            git push
 jobs:
-  deploy-dcgm-exporter-staging:
+  deploy-staging:
     docker:
       - image: google/cloud-sdk
     steps:
@@ -39,28 +56,12 @@ jobs:
             docker build -t gcr.io/run-ai-staging/dcgm-exporter:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
             docker push gcr.io/run-ai-staging/dcgm-exporter:$TAG
 
-  deploy-pod-gpu-metrics-exporter-staging:
-    docker:
-      - image: google/cloud-sdk
-    steps:
-      - checkout
-      - run:
-          name: "Extract gcloud private key to file"
-          command: echo "$STAGING_GCLOUD_SERVICE_JSON_CONTENT" | base64 -d > ./my.json
-
-      - pre_docker_commands
-
-      - run:
-          name: "Docker build and push"
-          command: |
-            TAG=latest
             docker build -t gcr.io/run-ai-staging/pod-gpu-metrics-exporter:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
             docker push gcr.io/run-ai-staging/pod-gpu-metrics-exporter:$TAG
 
-
       - test_installkit
 
-  deploy-dcgm-exporter-production:
+  deploy-production:
     docker:
       - image: google/cloud-sdk
     steps:
@@ -74,45 +75,27 @@ jobs:
       - run:
           name: "Docker build and push"
           command: |
-            TAG=1.0.0
+            TAG=${CIRCLE_TAG/v/''}
             docker build -t gcr.io/run-ai-prod/dcgm-exporter:$TAG -f exporters/prometheus-dcgm/dcgm-exporter/Dockerfile .
             docker push gcr.io/run-ai-prod/dcgm-exporter:$TAG
 
-  deploy-pod-gpu-metrics-exporter-production:
-    docker:
-      - image: google/cloud-sdk
-    steps:
-      - checkout
-      - run:
-          name: "Extract gcloud private key to file"
-          command: echo "$PRODUCTION_GCLOUD_SERVICE_JSON_CONTENT" | base64 -d > ./my.json
-
-      - pre_docker_commands
-      
-      - run:
-          name: "Docker build and push"
-          command: |
-            TAG=1.0.0
             docker build -t gcr.io/run-ai-prod/pod-gpu-metrics-exporter:$TAG -f exporters/prometheus-dcgm/k8s/pod-gpu-metrics-exporter/Dockerfile .
             docker push gcr.io/run-ai-prod/pod-gpu-metrics-exporter:$TAG
+            
+      - update_version_in_installkit
 
 workflows:
   version: 2
   build_and_deploy:
     jobs:
-      - deploy-dcgm-exporter-staging:
+      - deploy-staging:
           filters:
             branches:
               only: master
-      - deploy-pod-gpu-metrics-exporter-staging:
+      - deploy-production:
           filters:
+            tags:
+              only: /^v.*/
             branches:
-              only: master
-      - deploy-dcgm-exporter-production:
-          filters:
-            branches:
-              only: production
-      - deploy-pod-gpu-metrics-exporter-production:
-          filters:
-            branches:
-              only: production
+              ignore: /.*/
+
