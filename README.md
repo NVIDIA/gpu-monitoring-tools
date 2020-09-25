@@ -72,7 +72,7 @@ $ kubectl create -f \
 
 # Note might take ~1-2 minutes for prometheus to pickup the metrics and display them
 # You can also check in the WebUI the servce-discovery tab (in the Status category)
-$ NAME=$(kubectl get svc -l app=prometheus-operator-prometheus -o jsonpath='{.items[0].metadata.name}')
+$ NAME=$(kubectl get pod --all-namespaces -l app=prometheus -o jsonpath='{.items[0].metadata.name}')
 $ kubectl port-forward $NAME 9090:9090 &
 $ curl -sL http://127.0.01:9090/api/v1/query?query=DCGM_FI_DEV_MEMORY_TEMP"
 {
