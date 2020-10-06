@@ -1,12 +1,61 @@
 apiVersion: v1
 entries:
+  dcgm-exporter:
+  - apiVersion: v1
+    appVersion: 2.0.10
+    created: "2020-10-05T22:22:59.276791854-07:00"
+    description: A Helm chart for DCGM exporter
+    digest: acc932ae4e4e8e87f7750f79673abf5c06b5ba11c4b611ef67663a77a014a695
+    kubeVersion: '>= 1.13.0'
+    name: dcgm-exporter
+    sources:
+    - https://gitlab.com/nvidia/container-toolkit/gpu-monitoring-tools
+    urls:
+    - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/dcgm-exporter-1.1.0.tgz
+    version: 1.1.0
   kube-prometheus:
   - apiVersion: v1
-    created: 2018-11-12T11:43:49.185312639-08:00
+    created: "2020-10-05T22:22:59.292129804-07:00"
+    dependencies:
+    - condition: deployAlertManager
+      name: alertmanager
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.0.13
+    - name: prometheus
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.0.25
+    - name: exporter-kube-controller-manager
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.1.7
+    - name: exporter-kube-dns
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.1.5
+    - name: exporter-kube-etcd
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.1.9
+    - name: exporter-kube-scheduler
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.1.6
+    - name: exporter-kube-state
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.1.15
+    - name: exporter-kubelets
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.2.7
+    - name: exporter-kubernetes
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.1.6
+    - condition: deployExporterNode
+      name: exporter-node
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.2.0
+    - condition: deployGrafana
+      name: grafana
+      repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
+      version: 0.0.24
     description: Manifests, dashboards, and alerting rules for end-to-end Kubernetes
       cluster monitoring.
     digest: 1a5c3ac631bbc5a41475ace1c02fbf409987cd3b34ecf498a6c192a58acd956f
-    engine: gotpl
     maintainers:
     - email: mgoodness@gmail.com
       name: Michael Goodness
@@ -20,11 +69,10 @@ entries:
     version: 0.0.43
   prometheus-operator:
   - apiVersion: v1
-    created: 2018-11-12T11:43:49.186144163-08:00
+    created: "2020-10-05T22:22:59.293708484-07:00"
     description: Provides easy monitoring definitions for Kubernetes services, and
       deployment and management of Prometheus instances.
     digest: 77fc8daddc0544cf90c0686e4c63a8ee085c75a685d974756ae59ffd9de179d9
-    engine: gotpl
     maintainers:
     - email: mgoodness@gmail.com
       name: Michael Goodness
@@ -36,4 +84,4 @@ entries:
     urls:
     - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/prometheus-operator-0.0.15.tgz
     version: 0.0.15
-generated: 2018-11-12T11:43:49.173767664-08:00
+generated: "2020-10-05T22:22:59.275602535-07:00"

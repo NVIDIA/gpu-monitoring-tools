@@ -14,6 +14,7 @@ kubectl label nodes <gpu-node-name> hardware-type=NVIDIAGPU
 # Install helm https://docs.helm.sh/using_helm/ then run:
 helm repo add gpu-helm-charts https://nvidia.github.io/gpu-monitoring-tools/helm-charts
 helm repo update
+helm install --generate-name gpu-helm-charts/dcgm-exporter
 helm install gpu-helm-charts/prometheus-operator --name prometheus-operator --namespace monitoring
 helm install gpu-helm-charts/kube-prometheus --name kube-prometheus --namespace monitoring
 ```
