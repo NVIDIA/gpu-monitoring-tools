@@ -1,27 +1,38 @@
 # Helm charts for GPU metrics
 
-To collect and visualize NVIDIA GPU metrics in kubernetes cluster, we have modified upstream prometheus-operator helm charts [release-0.18](https://github.com/coreos/prometheus-operator/tree/release-0.18/helm). More information about the changes made are listed [here](https://nvidia.github.io/gpu-monitoring-tools/CHANGELOG.md).
+To collect and visualize NVIDIA GPU metrics in a Kubernetes cluster, use the provided Helm chart to deploy [DCGM-Exporter](https://github.com/nvidia/gpu-monitoring-tools/).
 
-#### Identify and label GPU nodes
-```sh
-# Label GPU nodes to run our node-exporter only on GPU nodes.
-# Note that a nodeSelector label is defined in node-exporter to control deploying it on GPU nodes only. 
-kubectl label nodes <gpu-node-name> hardware-type=NVIDIAGPU
+For full instructions on setting up Prometheus (using `kube-prometheus-stack`) and Grafana with DCGM-Exporter, review the [documentation](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html#gpu-telemetry)
+
+#### Install Helm charts
+
+First, install Helm v3 using the official script:
+
+```console
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && \
+    chmod 700 get_helm.sh && \
+    ./get_helm.sh
 ```
+Next, setup the Helm repo:
 
-#### Install helm charts
-```sh
-# Install helm https://docs.helm.sh/using_helm/ then run:
-helm repo add gpu-helm-charts https://nvidia.github.io/gpu-monitoring-tools/helm-charts
+```console
+helm repo add gpu-helm-charts \
+    https://nvidia.github.io/gpu-monitoring-tools/helm-charts
+```
+Update the repo:
+
+```console
 helm repo update
-helm install --generate-name gpu-helm-charts/dcgm-exporter
-helm install gpu-helm-charts/prometheus-operator --name prometheus-operator --namespace monitoring
-helm install gpu-helm-charts/kube-prometheus --name kube-prometheus --namespace monitoring
 ```
 
-#### GPU metrics Dashboard
-```sh
-# Forward the port for Grafana.
-kubectl -n monitoring port-forward $(kubectl get pods -n monitoring -lapp=kube-prometheus-grafana -ojsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}') 3000 &
-# Open in browser http://localhost:3000 and go to Nodes Dashboard
+Install the official chart for DCGM-Exporter:
+
+```console
+helm install \
+    --generate-name \
+    gpu-helm-charts/dcgm-exporter
 ```
+
+#### GPU Metrics Dashboard
+
+We provide an official dashboard on Grafana: [https://grafana.com/grafana/dashboards/12239](https://grafana.com/grafana/dashboards/12239)
