@@ -23,7 +23,7 @@ type DeviceHealth struct {
 	Watches []SystemWatch
 }
 
-func setHealthWatches(groupId groupHandle) (err error) {
+func setHealthWatches(groupId GroupHandle) (err error) {
 	result := C.dcgmHealthSet(handle.handle, groupId.handle, C.DCGM_HEALTH_WATCH_ALL)
 	if err = errorString(result); err != nil {
 		return fmt.Errorf("Error setting health watches: %s", err)
@@ -33,12 +33,12 @@ func setHealthWatches(groupId groupHandle) (err error) {
 
 func healthCheckByGpuId(gpuId uint) (deviceHealth DeviceHealth, err error) {
 	name := fmt.Sprintf("health%d", rand.Uint64())
-	groupId, err := createGroup(name)
+	groupId, err := CreateGroup(name)
 	if err != nil {
 		return
 	}
 
-	err = addToGroup(groupId, gpuId)
+	err = AddToGroup(groupId, gpuId)
 	if err != nil {
 		return
 	}
@@ -48,8 +48,8 @@ func healthCheckByGpuId(gpuId uint) (deviceHealth DeviceHealth, err error) {
 		return
 	}
 
-	var healthResults C.dcgmHealthResponse_v1
-	healthResults.version = makeVersion1(unsafe.Sizeof(healthResults))
+	var healthResults C.dcgmHealthResponse_v4
+	healthResults.version = makeVersion2(unsafe.Sizeof(healthResults))
 
 	result := C.dcgmHealthCheck(handle.handle, groupId.handle, (*C.dcgmHealthResponse_t)(unsafe.Pointer(&healthResults)))
 
@@ -60,18 +60,15 @@ func healthCheckByGpuId(gpuId uint) (deviceHealth DeviceHealth, err error) {
 	status := healthStatus(int8(healthResults.overallHealth))
 	watches := []SystemWatch{}
 
-	// only 1 gpu
-	i := 0
-
 	// number of watches that encountred error/warning
-	incidents := uint(healthResults.gpu[i].incidentCount)
+	incidents := uint(healthResults.incidentCount)
 
 	for j := uint(0); j < incidents; j++ {
 		watch := SystemWatch{
-			Type:   systemWatch(int(healthResults.gpu[i].systems[j].system)),
-			Status: healthStatus(int8(healthResults.gpu[i].systems[j].health)),
+			Type:   systemWatch(int(healthResults.incidents[j].system)),
+			Status: healthStatus(int8(healthResults.incidents[j].health)),
 
-			Error: *stringPtr(&healthResults.gpu[i].systems[j].errorString[0]),
+			Error: *stringPtr(&healthResults.incidents[j].error.msg[0]),
 		}
 		watches = append(watches, watch)
 	}
@@ -81,7 +78,7 @@ func healthCheckByGpuId(gpuId uint) (deviceHealth DeviceHealth, err error) {
 		Status:  status,
 		Watches: watches,
 	}
-	_ = destroyGroup(groupId)
+	_ = DestroyGroup(groupId)
 	return
 }
 

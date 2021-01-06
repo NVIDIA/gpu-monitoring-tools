@@ -1,1 +1,6 @@
 .idea/
+*.swp
+*.swo
+dcgm-exporter
+!etc/dcgm-exporter/
+!deployment/dcgm-exporter/

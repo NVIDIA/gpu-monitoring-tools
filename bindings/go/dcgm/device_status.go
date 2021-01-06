@@ -1,14 +1,13 @@
 package dcgm
 
 /*
-#include "dcgm_agent.h"
-#include "dcgm_structs.h"
+#include "./dcgm_agent.h"
+#include "./dcgm_structs.h"
 */
 import "C"
 import (
 	"fmt"
 	"math/rand"
-	"unsafe"
 )
 
 type PerfState uint
@@ -27,48 +26,48 @@ func (p PerfState) String() string {
 }
 
 type UtilizationInfo struct {
-	GPU     *uint // %
-	Memory  *uint // %
-	Encoder *uint // %
-	Decoder *uint // %
+	GPU     int64 // %
+	Memory  int64 // %
+	Encoder int64 // %
+	Decoder int64 // %
 }
 
 type ECCErrorsInfo struct {
-	SingleBit *uint
-	DoubleBit *uint
+	SingleBit int64
+	DoubleBit int64
 }
 
 type MemoryInfo struct {
-	GlobalUsed *uint64
+	GlobalUsed int64
 	ECCErrors  ECCErrorsInfo
 }
 
 type ClockInfo struct {
-	Cores  *uint // MHz
-	Memory *uint // MHz
+	Cores  int64 // MHz
+	Memory int64 // MHz
 }
 
 type PCIThroughputInfo struct {
-	Rx      *uint64 // MB
-	Tx      *uint64 // MB
-	Replays *uint64
+	Rx      int64 // MB
+	Tx      int64 // MB
+	Replays int64
 }
 
 type PCIStatusInfo struct {
-	BAR1Used   *uint // MB
+	BAR1Used   int64 // MB
 	Throughput PCIThroughputInfo
-	FBUsed     *uint
+	FBUsed     int64
 }
 
 type DeviceStatus struct {
-	Power       *float64 // W
-	Temperature *uint    // °C
+	Power       float64 // W
+	Temperature int64   // °C
 	Utilization UtilizationInfo
 	Memory      MemoryInfo
 	Clocks      ClockInfo
 	PCI         PCIStatusInfo
 	Performance PerfState
-	FanSpeed    uint // %
+	FanSpeed    int64 // %
 }
 
 func latestValuesForDevice(gpuId uint) (status DeviceStatus, err error) {
@@ -93,7 +92,7 @@ func latestValuesForDevice(gpuId uint) (status DeviceStatus, err error) {
 		fieldsCount
 	)
 
-	var deviceFields []C.ushort = make([]C.ushort, fieldsCount)
+	deviceFields := make([]Short, fieldsCount)
 	deviceFields[pwr] = C.DCGM_FI_DEV_POWER_USAGE
 	deviceFields[temp] = C.DCGM_FI_DEV_GPU_TEMP
 	deviceFields[sm] = C.DCGM_FI_DEV_GPU_UTIL
@@ -113,70 +112,68 @@ func latestValuesForDevice(gpuId uint) (status DeviceStatus, err error) {
 	deviceFields[fanSpeed] = C.DCGM_FI_DEV_FAN_SPEED
 
 	fieldsName := fmt.Sprintf("devStatusFields%d", rand.Uint64())
-	fieldsId, err := fieldGroupCreate(fieldsName, deviceFields, fieldsCount)
+	fieldsId, err := FieldGroupCreate(fieldsName, deviceFields)
 	if err != nil {
 		return
 	}
 
 	groupName := fmt.Sprintf("devStatus%d", rand.Uint64())
-	groupId, err := watchFields(gpuId, fieldsId, groupName)
+	groupId, err := WatchFields(gpuId, fieldsId, groupName)
 	if err != nil {
-		_ = fieldGroupDestroy(fieldsId)
+		_ = FieldGroupDestroy(fieldsId)
 		return
 	}
 
-	values := make([]C.dcgmFieldValue_t, fieldsCount)
-	result := C.dcgmGetLatestValuesForFields(handle.handle, C.int(gpuId), &deviceFields[0], C.uint(fieldsCount), &values[0])
-
-	if err = errorString(result); err != nil {
-		_ = fieldGroupDestroy(fieldsId)
-		_ = destroyGroup(groupId)
+	values, err := GetLatestValuesForFields(gpuId, deviceFields)
+	if err != nil {
+		_ = FieldGroupDestroy(fieldsId)
+		_ = DestroyGroup(groupId)
 		return status, fmt.Errorf("Error getting device status: %s", err)
 	}
 
-	power := dblToFloatUnsafe(unsafe.Pointer(&values[pwr].value))
+	power := values[pwr].Float64()
 
 	gpuUtil := UtilizationInfo{
-		GPU:     uintPtrUnsafe(unsafe.Pointer(&values[sm].value)),
-		Memory:  uintPtrUnsafe(unsafe.Pointer(&values[mem].value)),
-		Encoder: uintPtrUnsafe(unsafe.Pointer(&values[enc].value)),
-		Decoder: uintPtrUnsafe(unsafe.Pointer(&values[dec].value)),
+		GPU:     values[sm].Int64(),
+		Memory:  values[mem].Int64(),
+		Encoder: values[enc].Int64(),
+		Decoder: values[dec].Int64(),
 	}
 
 	memory := MemoryInfo{
 		ECCErrors: ECCErrorsInfo{
-			SingleBit: uintPtrUnsafe(unsafe.Pointer(&values[sbe].value)),
-			DoubleBit: uintPtrUnsafe(unsafe.Pointer(&values[dbe].value)),
+			SingleBit: values[sbe].Int64(),
+			DoubleBit: values[dbe].Int64(),
 		},
 	}
 
 	clocks := ClockInfo{
-		Cores:  uintPtrUnsafe(unsafe.Pointer(&values[smClock].value)),
-		Memory: uintPtrUnsafe(unsafe.Pointer(&values[memClock].value)),
+		Cores:  values[smClock].Int64(),
+		Memory: values[memClock].Int64(),
 	}
 
 	pci := PCIStatusInfo{
-		BAR1Used: uintPtrUnsafe(unsafe.Pointer(&values[bar1Used].value)),
+		BAR1Used: values[bar1Used].Int64(),
 		Throughput: PCIThroughputInfo{
-			Rx:      uint64PtrUnsafe(unsafe.Pointer(&values[pcieRxThroughput].value)),
-			Tx:      uint64PtrUnsafe(unsafe.Pointer(&values[pcieTxThroughput].value)),
-			Replays: uint64PtrUnsafe(unsafe.Pointer(&values[pcieReplay].value)),
+			Rx:      values[pcieRxThroughput].Int64(),
+			Tx:      values[pcieTxThroughput].Int64(),
+			Replays: values[pcieReplay].Int64(),
 		},
-		FBUsed: uintPtrUnsafe(unsafe.Pointer(&values[fbUsed].value)),
+		FBUsed: values[fbUsed].Int64(),
 	}
 
 	status = DeviceStatus{
 		Power:       power,
-		Temperature: uintPtrUnsafe(unsafe.Pointer(&values[temp].value)),
+		Temperature: values[temp].Int64(),
 		Utilization: gpuUtil,
 		Memory:      memory,
 		Clocks:      clocks,
 		PCI:         pci,
-		Performance: PerfState(*uintPtrUnsafe(unsafe.Pointer(&values[pstate].value))),
-		FanSpeed:    *uintPtrUnsafe(unsafe.Pointer(&values[fanSpeed].value)),
+		Performance: PerfState(values[pstate].Int64()),
+		FanSpeed:    values[fanSpeed].Int64(),
 	}
 
-	_ = fieldGroupDestroy(fieldsId)
-	_ = destroyGroup(groupId)
+	_ = FieldGroupDestroy(fieldsId)
+	_ = DestroyGroup(groupId)
 	return
 }

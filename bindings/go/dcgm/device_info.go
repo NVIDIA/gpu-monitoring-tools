@@ -13,9 +13,9 @@ import (
 
 type PCIInfo struct {
 	BusID     string
-	BAR1      *uint // MB
-	FBTotal   *uint // MB
-	Bandwidth *uint // MB/s
+	BAR1      uint  // MB
+	FBTotal   uint  // MB
+	Bandwidth int64 // MB/s
 }
 
 type DeviceIdentifiers struct {
@@ -31,9 +31,8 @@ type Device struct {
 	GPU           uint
 	DCGMSupported string
 	UUID          string
-	Power         *uint // W
+	Power         uint // W
 	PCI           PCIInfo
-	Clocks        ClockInfo
 	Identifiers   DeviceIdentifiers
 	Topology      []P2PLink
 	CPUAffinity   string
@@ -70,61 +69,58 @@ func getSupportedDevices() (gpus []uint, err error) {
 	return
 }
 
-func getPciBandwidth(gpuId uint) (*uint, error) {
+func getPciBandwidth(gpuId uint) (int64, error) {
 	const (
 		maxLinkGen int = iota
 		maxLinkWidth
 		fieldsCount
 	)
 
-	pciFields := make([]C.ushort, fieldsCount)
+	pciFields := make([]Short, fieldsCount)
 	pciFields[maxLinkGen] = C.DCGM_FI_DEV_PCIE_MAX_LINK_GEN
 	pciFields[maxLinkWidth] = C.DCGM_FI_DEV_PCIE_MAX_LINK_WIDTH
 
 	fieldsName := fmt.Sprintf("pciBandwidthFields%d", rand.Uint64())
 
-	fieldsId, err := fieldGroupCreate(fieldsName, pciFields, fieldsCount)
+	fieldsId, err := FieldGroupCreate(fieldsName, pciFields)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	groupName := fmt.Sprintf("pciBandwidth%d", rand.Uint64())
-	groupId, err := watchFields(gpuId, fieldsId, groupName)
+	groupId, err := WatchFields(gpuId, fieldsId, groupName)
 	if err != nil {
-		_ = fieldGroupDestroy(fieldsId)
-		return nil, err
+		_ = FieldGroupDestroy(fieldsId)
+		return 0, err
 	}
 
-	values := make([]C.dcgmFieldValue_t, fieldsCount)
-	result := C.dcgmGetLatestValuesForFields(handle.handle, C.int(gpuId), &pciFields[0], C.uint(fieldsCount), &values[0])
-	if err = errorString(result); err != nil {
-		_ = fieldGroupDestroy(fieldsId)
-		_ = destroyGroup(groupId)
-		return nil, fmt.Errorf("Error getting Pcie bandwidth: %s", err)
+	values, err := GetLatestValuesForFields(gpuId, pciFields)
+	if err != nil {
+		_ = FieldGroupDestroy(fieldsId)
+		_ = DestroyGroup(groupId)
+		return 0, fmt.Errorf("Error getting Pcie bandwidth: %s", err)
 	}
 
-	gen := uintPtrUnsafe(unsafe.Pointer(&values[maxLinkGen].value))
-	width := uintPtrUnsafe(unsafe.Pointer(&values[maxLinkWidth].value))
+	gen := values[maxLinkGen].Int64()
+	width := values[maxLinkWidth].Int64()
 
-	_ = fieldGroupDestroy(fieldsId)
-	_ = destroyGroup(groupId)
+	_ = FieldGroupDestroy(fieldsId)
+	_ = DestroyGroup(groupId)
 
-	genMap := map[uint]uint{
+	genMap := map[int64]int64{
 		1: 250, // MB/s
 		2: 500,
 		3: 985,
 		4: 1969,
 	}
-	if gen == nil || width == nil {
-		return nil, nil
-	}
-	bandwidth := genMap[*gen] * *width
-	return &bandwidth, nil
+
+	bandwidth := genMap[gen] * width
+	return bandwidth, nil
 }
 
 func getDeviceInfo(gpuid uint) (deviceInfo Device, err error) {
 	var device C.dcgmDeviceAttributes_t
-	device.version = makeVersion1(unsafe.Sizeof(device))
+	device.version = makeVersion2(unsafe.Sizeof(device))
 
 	result := C.dcgmGetDeviceAttributes(handle.handle, C.uint(gpuid), &device)
 	if err = errorString(result); err != nil {
@@ -154,7 +150,7 @@ func getDeviceInfo(gpuid uint) (deviceInfo Device, err error) {
 	}
 
 	var topology []P2PLink
-	var bandwidth *uint
+	var bandwidth int64
 	// get device topology and bandwidth only if its a DCGM supported device
 	if supported == "Yes" {
 		topology, err = getDeviceTopology(gpuid)
@@ -168,19 +164,13 @@ func getDeviceInfo(gpuid uint) (deviceInfo Device, err error) {
 	}
 
 	uuid := *stringPtr(&device.identifiers.uuid[0])
-	power := uintPtr(device.powerLimits.defaultPowerLimit)
+	power := *uintPtr(device.powerLimits.defaultPowerLimit)
 
 	pci := PCIInfo{
 		BusID:     busid,
-		BAR1:      uintPtr(device.memoryUsage.bar1Total),
-		FBTotal:   uintPtr(device.memoryUsage.fbTotal),
+		BAR1:      *uintPtr(device.memoryUsage.bar1Total),
+		FBTotal:   *uintPtr(device.memoryUsage.fbTotal),
 		Bandwidth: bandwidth,
-	}
-
-	var clocks ClockInfo
-	if device.clockSets.count >= 1 {
-		clocks.Memory = uintPtr(device.clockSets.clockSet[0].memClock)
-		clocks.Cores = uintPtr(device.clockSets.clockSet[0].smClock)
 	}
 
 	identifiers := DeviceIdentifiers{
@@ -198,7 +188,6 @@ func getDeviceInfo(gpuid uint) (deviceInfo Device, err error) {
 		UUID:          uuid,
 		Power:         power,
 		PCI:           pci,
-		Clocks:        clocks,
 		Identifiers:   identifiers,
 		Topology:      topology,
 		CPUAffinity:   cpuAffinity,

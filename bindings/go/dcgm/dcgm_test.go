@@ -16,8 +16,9 @@ func check(err error, t *testing.T) {
 }
 
 func TestDeviceCount(t *testing.T) {
-	check(Init(Embedded), t)
-	defer func() { check(Shutdown(), t) }()
+	cleanup, err := Init(Embedded)
+	check(err, t)
+	defer cleanup()
 
 	count, err := GetAllDeviceCount()
 	check(err, t)
@@ -43,8 +44,9 @@ func BenchmarkDeviceCount1(b *testing.B) {
 }
 
 func TestDeviceInfo(t *testing.T) {
-	check(Init(Embedded), t)
-	defer func() { check(Shutdown(), t) }()
+	cleanup, err := Init(Embedded)
+	check(err, t)
+	defer cleanup()
 
 	fields := []string{
 		"driver_version",
@@ -54,8 +56,6 @@ func TestDeviceInfo(t *testing.T) {
 		"pci.bus_id",
 		"vbios_version",
 		"inforom.img",
-		"clocks.max.sm",
-		"clocks.max.memory",
 		"power.limit",
 	}
 
@@ -94,21 +94,19 @@ func TestDeviceInfo(t *testing.T) {
 			case "inforom.img":
 				msg = "Device inforom image"
 				output = info.Identifiers.InforomImageVersion
-			case "clocks.max.sm":
-				msg = "Device sm clock"
-				output = strconv.FormatUint(uint64(*info.Clocks.Cores), 10)
-			case "clocks.max.memory":
-				msg = "Device mem clock"
-				output = strconv.FormatUint(uint64(*info.Clocks.Memory), 10)
 			case "power.limit":
 				msg = "Device power limit"
-				output = strconv.FormatUint(uint64(*info.Power), 10)
+				output = strconv.FormatUint(uint64(info.Power), 10)
 				power, err := strconv.ParseFloat(res, 64)
 				check(err, t)
 				res = strconv.FormatUint(uint64(math.Round(power)), 10)
 			}
 
 			if strings.Compare(res, output) != 0 {
+				if strings.Contains(output, "NOT_SUPPORTED") {
+					continue
+				}
+
 				t.Errorf("%v from dcgm is wrong, got: %v, want: %v", msg, output, res)
 			}
 		}
@@ -129,8 +127,9 @@ func BenchmarkDeviceInfo1(b *testing.B) {
 }
 
 func TestDeviceStatus(t *testing.T) {
-	check(Init(Embedded), t)
-	defer func() { check(Shutdown(), t) }()
+	cleanup, err := Init(Embedded)
+	check(err, t)
+	defer cleanup()
 
 	gpus, err := GetSupportedDevices()
 	check(err, t)
@@ -158,28 +157,28 @@ func TestDeviceStatus(t *testing.T) {
 			switch val {
 			case "power.draw":
 				msg = "Device power utilization"
-				output = strconv.FormatUint(uint64(math.Round(*status.Power)), 10)
+				output = strconv.FormatUint(uint64(math.Round(status.Power)), 10)
 				power, err := strconv.ParseFloat(res, 64)
 				check(err, t)
 				res = strconv.FormatUint(uint64(math.Round(power)), 10)
 			case "temperature.gpu":
 				msg = "Device temperature"
-				output = strconv.FormatUint(uint64(*status.Temperature), 10)
+				output = strconv.FormatUint(uint64(status.Temperature), 10)
 			case "utilization.gpu":
 				msg = "Device gpu utilization"
-				output = strconv.FormatUint(uint64(*status.Utilization.GPU), 10)
+				output = strconv.FormatUint(uint64(status.Utilization.GPU), 10)
 			case "utilization.memory":
 				msg = "Device memory utilization"
-				output = strconv.FormatUint(uint64(*status.Utilization.Memory), 10)
+				output = strconv.FormatUint(uint64(status.Utilization.Memory), 10)
 			case "encoder.stats.averageFps":
 				msg = "Device encoder utilization"
-				output = strconv.FormatUint(uint64(*status.Utilization.Encoder), 10)
+				output = strconv.FormatUint(uint64(status.Utilization.Encoder), 10)
 			case "clocks.current.sm":
 				msg = "Device sm clock"
-				output = strconv.FormatUint(uint64(*status.Clocks.Cores), 10)
+				output = strconv.FormatUint(uint64(status.Clocks.Cores), 10)
 			case "clocks.current.memory":
 				msg = "Device mem clock"
-				output = strconv.FormatUint(uint64(*status.Clocks.Memory), 10)
+				output = strconv.FormatUint(uint64(status.Clocks.Memory), 10)
 			}
 
 			if strings.Compare(res, output) != 0 {
