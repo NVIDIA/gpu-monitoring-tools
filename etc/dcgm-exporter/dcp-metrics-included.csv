@@ -37,6 +37,7 @@ DCGM_FI_DEV_RELIABILITY_VIOLATION, counter, Throttling duration due to reliabili
 # Memory usage,,
 DCGM_FI_DEV_FB_FREE, gauge, Framebuffer memory free (in MiB).
 DCGM_FI_DEV_FB_USED, gauge, Framebuffer memory used (in MiB).
+DCGM_FI_DEV_FB_TOTAL, gauge, Framebuffer memory total (in MiB).
 
 # ECC,,
 DCGM_FI_DEV_ECC_SBE_VOL_TOTAL, counter, Total number of single-bit volatile ECC errors.
@@ -71,4 +72,3 @@ DCGM_FI_PROF_PIPE_FP32_ACTIVE,   gauge, Ratio of cycles the fp32 pipes are activ
 DCGM_FI_PROF_PIPE_FP16_ACTIVE,   gauge, Ratio of cycles the fp16 pipes are active (in %).
 DCGM_FI_PROF_PCIE_TX_BYTES,      counter, The number of bytes of active pcie tx data including both header and payload.
 DCGM_FI_PROF_PCIE_RX_BYTES,      counter, The number of bytes of active pcie rx data including both header and payload.
-

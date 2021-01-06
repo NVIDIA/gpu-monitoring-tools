@@ -22,12 +22,14 @@ import (
 	"time"
 
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
+	"github.com/sirupsen/logrus"
 )
 
 func NewDCGMCollector(c []Counter) (*DCGMCollector, func(), error) {
 	collector := &DCGMCollector{
-		Counters:     c,
-		DeviceFields: NewDeviceFields(c),
+		Counters:             c,
+		DeviceFields:         NewDeviceFields(c),
+		GpuToLastNotIdleTime: map[string]int64{},
 	}
 
 	cleanups, err := SetupDcgmFieldsWatch(collector.DeviceFields)
@@ -65,27 +67,20 @@ func (c *DCGMCollector) GetMetrics() ([][]Metric, error) {
 			return nil, err
 		}
 
-		metrics[i] = c.ToMetric(vals, c.Counters, deviceInfo)
+		metrics[i] = ToMetric(vals, c.Counters, deviceInfo)
+		metrics[i] = c.addLastNotIdleMetric(deviceInfo, metrics[i])
 	}
 
 	return metrics, nil
 }
 
-func (c *DCGMCollector) ToMetric(values []dcgm.FieldValue_v1, counter []Counter, d dcgm.Device) []Metric {
+func ToMetric(values []dcgm.FieldValue_v1, counter []Counter, d dcgm.Device) []Metric {
 	var metrics []Metric
-	gpuUtilization := 0
 	for i, val := range values {
 		v := ToString(val)
 		// Filter out counters with no value
 		if v == SkipDCGMValue {
 			continue
-		}
-		if counter[i].FieldName == "DCGM_FI_DEV_GPU_UTIL" {
-			var err error
-			gpuUtilization, err = strconv.Atoi(v)
-			if err != nil {
-				gpuUtilization = 0
-			}
 		}
 		m := Metric{
 			Name:  counter[i].FieldName,
@@ -99,25 +94,37 @@ func (c *DCGMCollector) ToMetric(values []dcgm.FieldValue_v1, counter []Counter,
 		}
 		metrics = append(metrics, m)
 	}
-
-	if _, found := c.GpuToLastNotIdleTime[d.UUID]; !found || gpuUtilization > 2 {
-		c.GpuToLastNotIdleTime[d.UUID] = time.Now().Unix()
-	}
-	m := Metric{
-		Name:  "DCGM_GPU_LAST_NOT_IDLE_TIME",
-		Value: fmt.Sprintf("%v",c.GpuToLastNotIdleTime[d.UUID]),
-
-		GPU:       fmt.Sprintf("%d", d.GPU),
-		GPUUUID:   d.UUID,
-		GPUDevice: fmt.Sprintf("nvidia%d", d.GPU),
-
-		Attributes: map[string]string{},
-	}
-	metrics = append(metrics, m)
-
-
 	return metrics
+}
 
+func (c *DCGMCollector) addLastNotIdleMetric(d dcgm.Device, metrics []Metric) []Metric {
+
+	for _, metric := range metrics {
+		if metric.Name != "DCGM_FI_DEV_GPU_UTIL" {
+			continue
+		}
+
+		gpuUtilization, err := strconv.Atoi(metric.Value)
+		if err != nil {
+			logrus.Warnf("failed to convert value: %v to number", metric.Value)
+			gpuUtilization = 0
+		}
+		if _, found := c.GpuToLastNotIdleTime[d.UUID]; !found || gpuUtilization > 2 {
+			c.GpuToLastNotIdleTime[d.UUID] = time.Now().Unix()
+		}
+		m := Metric{
+			Name:  "DCGM_GPU_LAST_NOT_IDLE_TIME",
+			Value: fmt.Sprintf("%v", c.GpuToLastNotIdleTime[d.UUID]),
+
+			GPU:       fmt.Sprintf("%d", d.GPU),
+			GPUUUID:   d.UUID,
+			GPUDevice: fmt.Sprintf("nvidia%d", d.GPU),
+
+			Attributes: map[string]string{},
+		}
+		metrics = append(metrics, m)
+	}
+	return metrics
 }
 
 func ToString(value dcgm.FieldValue_v1) string {

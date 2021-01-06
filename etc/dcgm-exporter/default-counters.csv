@@ -60,6 +60,3 @@ DCGM_FI_DEV_NVLINK_BANDWIDTH_TOTAL,            counter, Total number of NVLink b
 
 # VGPU License status,,
 DCGM_FI_DEV_VGPU_LICENSE_STATUS, gauge, vGPU License status
-
-# Run ai additions
-DCGM_GPU_LAST_NOT_IDLE_TIME, gauge, Timestamp of last time GPU utilization was 2% or less.

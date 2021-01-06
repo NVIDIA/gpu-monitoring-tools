@@ -16,6 +16,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: "dcgm-exporter"
+  namespace: "runai"
   labels:
     app.kubernetes.io/name: "dcgm-exporter"
     app.kubernetes.io/version: "2.1.1"
@@ -34,7 +35,7 @@ spec:
       name: "dcgm-exporter"
     spec:
       containers:
-      - image: "nvidia/dcgm-exporter:2.0.13-2.1.1-ubuntu18.04"
+      - image: "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:2.0.13-2.1.1-ubuntu18.04"
         env:
         - name: "DCGM_EXPORTER_LISTEN"
           value: ":9400"

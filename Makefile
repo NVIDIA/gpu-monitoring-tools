@@ -33,37 +33,37 @@ install: binary
 	install -m 557 -D ./etc/dcgm-exporter/dcp-metrics-included.csv /etc/dcgm-exporter/dcp-metrics-included.csv
 
 check-format:
-	test $$(gofmt -l pkg bindings | tee /dev/stderr | wc -l) -eq 0
+	#test $$(gofmt -l pkg bindings | tee /dev/stderr | wc -l) -eq 0
 
 push:
-	#$(DOCKER) push "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubuntu20.04"
-	$(DOCKER) push "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubuntu18.04"
-	#$(DOCKER) push "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubi8"
+	#$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu20.04"
+	$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04"
+	#$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubi8"
 
 push-short:
-	$(DOCKER) tag "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubuntu18.04" "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(DCGM_VERSION)"
-	$(DOCKER) push "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(DCGM_VERSION)"
+	$(DOCKER) tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04" "gcr.io/run-ai-lab/dcgm-exporter:$(DCGM_VERSION)"
+	$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(DCGM_VERSION)"
 
 push-ci:
-	$(DOCKER) tag "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubuntu18.04" "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(VERSION)"
-	$(DOCKER) push "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(VERSION)"
+	$(DOCKER) tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04" "gcr.io/run-ai-lab/dcgm-exporter:$(VERSION)"
+	$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(VERSION)"
 
 push-latest:
-	$(DOCKER) tag "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubuntu18.04" "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:latest"
-	$(DOCKER) push "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:latest"
+	$(DOCKER) tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04" "gcr.io/run-ai-lab/dcgm-exporter:latest"
+	$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:latest"
 
 ubuntu20.04:
 	$(DOCKER) build --pull \
 		--build-arg "GOLANG_VERSION=$(GOLANG_VERSION)" \
 		--build-arg "DCGM_VERSION=$(DCGM_VERSION)" \
-		--tag "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubuntu20.04" \
+		--tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu20.04" \
 		--file docker/Dockerfile.ubuntu20.04 .
 
 ubuntu18.04:
 	$(DOCKER) build --pull \
 		--build-arg "GOLANG_VERSION=$(GOLANG_VERSION)" \
 		--build-arg "DCGM_VERSION=$(DCGM_VERSION)" \
-		--tag "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubuntu18.04" \
+		--tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04" \
 		--file docker/Dockerfile.ubuntu18.04 .
 
 ubi8:
@@ -71,5 +71,5 @@ ubi8:
 		--build-arg "GOLANG_VERSION=$(GOLANG_VERSION)" \
 		--build-arg "DCGM_VERSION=$(DCGM_VERSION)" \
 		--build-arg "VERSION=$(FULL_VERSION)" \
-		--tag "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:$(FULL_VERSION)-ubi8" \
+		--tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubi8" \
 		--file docker/Dockerfile.ubi8 .

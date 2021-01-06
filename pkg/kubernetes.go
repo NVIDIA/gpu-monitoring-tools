@@ -79,6 +79,9 @@ func (p *PodMapper) Process(metrics [][]Metric) error {
 			metrics[i][j].Attributes[podAttribute] = deviceToPod[GPUID].Name
 			metrics[i][j].Attributes[namespaceAttribute] = deviceToPod[GPUID].Namespace
 			metrics[i][j].Attributes[containerAttribute] = deviceToPod[GPUID].Container
+			metrics[i][j].Attributes["pod_name"] = deviceToPod[GPUID].Name
+			metrics[i][j].Attributes["pod_namespace"] = deviceToPod[GPUID].Namespace
+			metrics[i][j].Attributes["container_name"] = deviceToPod[GPUID].Container
 		}
 	}
 

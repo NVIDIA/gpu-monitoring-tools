@@ -13,8 +13,8 @@
 # limitations under the License.
 
 image:
-  repository: nvidia/dcgm-exporter
-  pullPolicy: IfNotPresent
+  repository: gcr.io/run-ai-lab/pod-gpu-metrics-exporter
+  pullPolicy: Always
   # Image tag defaults to AppVersion, but you can use the tag key
   # for the image tag, e.g:
   tag: 2.0.13-2.1.1-ubuntu18.04

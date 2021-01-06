@@ -115,7 +115,6 @@ func (m *MetricsPipeline) run() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to collect metrics with error: %v", err)
 	}
-	logrus.Info("Pipeline starting")
 
 	for _, transform := range m.transformations {
 		err := transform.Process(metrics)
