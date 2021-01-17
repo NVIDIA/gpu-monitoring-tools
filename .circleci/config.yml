@@ -48,7 +48,6 @@ jobs:
     docker:
       - image: circleci/golang:1.13
     resource_class: large # implements a machine with 4 vCPUS and 8gb of ram.
-    working_directory: /go/src/github.com/run-ai/runai-scheduler
     steps:
       - checkout
       - install_project_dependencies
