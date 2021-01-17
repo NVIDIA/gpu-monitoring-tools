@@ -37,8 +37,8 @@ check-format:
 
 push:
 	#$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu20.04"
-	$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04"
-	#$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubi8"
+	#$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04"
+	$(DOCKER) push "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubi8"
 
 push-short:
 	$(DOCKER) tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubuntu18.04" "gcr.io/run-ai-lab/dcgm-exporter:$(DCGM_VERSION)"

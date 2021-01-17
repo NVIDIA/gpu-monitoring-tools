@@ -4,10 +4,16 @@ commands:
     steps:
       - setup_remote_docker:
           docker_layer_caching: true
-
       - run:
           name: "Docker login"
           command: cat my.json | docker login -u _json_key --password-stdin https://gcr.io
+
+  install_project_dependencies:
+    steps:
+      - run:
+          name: "Install project dependencies"
+          command: |
+            go get -v -t ./...
 
   test_installkit:
     steps:
@@ -38,6 +44,14 @@ commands:
             git commit -m "updated dcgm-exporter production version to $TAG [skip ci]"
             git push
 jobs:
+  build_and_test:
+    docker:
+      - image: circleci/golang:1.13
+    resource_class: large # implements a machine with 4 vCPUS and 8gb of ram.
+    working_directory: /go/src/github.com/run-ai/runai-scheduler
+    steps:
+      - checkout
+      - install_project_dependencies
   deploy-staging:
     docker:
       - image: google/cloud-sdk
@@ -57,7 +71,7 @@ jobs:
             	--build-arg "GOLANG_VERSION=1.14.2" \
             	--build-arg "DCGM_VERSION=2.0.13" \
             	--tag "gcr.io/run-ai-staging/dcgm-exporter:$TAG" \
-            	--file docker/Dockerfile.ubuntu18.04 .
+            	--file docker/Dockerfile.ubi8 .
             docker push gcr.io/run-ai-staging/dcgm-exporter:$TAG
 
       - test_installkit
@@ -81,7 +95,7 @@ jobs:
             	--build-arg "GOLANG_VERSION=1.14.2" \
             	--build-arg "DCGM_VERSION=2.0.13" \
             	--tag "gcr.io/run-ai-prod/dcgm-exporter:$TAG" \
-            	--file docker/Dockerfile.ubuntu18.04 .
+            	--file docker/Dockerfile.ubi8 .
             docker push gcr.io/run-ai-prod/dcgm-exporter:$TAG
 
       - update_version_in_installkit
@@ -90,11 +104,21 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
+      - build_and_test:
+          filters:
+            tags:
+              only: /^v.*/
       - deploy-staging:
+          requires:
+            - build_and_test
           filters:
             branches:
-              only: master
+              only:
+              - master
+              - ubi2
       - deploy-production:
+          requires:
+            - build_and_test
           filters:
             tags:
               only: /^v.*/
