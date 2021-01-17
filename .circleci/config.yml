@@ -57,7 +57,7 @@ jobs:
             	--build-arg "GOLANG_VERSION=1.14.2" \
             	--build-arg "DCGM_VERSION=2.0.13" \
             	--tag "gcr.io/run-ai-staging/dcgm-exporter:$TAG" \
-            	--file docker/Dockerfile.ubuntu18.04 .
+            	--file docker/Dockerfile.ubi8 .
             docker push gcr.io/run-ai-staging/dcgm-exporter:$TAG
 
       - test_installkit
@@ -81,7 +81,7 @@ jobs:
             	--build-arg "GOLANG_VERSION=1.14.2" \
             	--build-arg "DCGM_VERSION=2.0.13" \
             	--tag "gcr.io/run-ai-prod/dcgm-exporter:$TAG" \
-            	--file docker/Dockerfile.ubuntu18.04 .
+            	--file docker/Dockerfile.ubi8 .
             docker push gcr.io/run-ai-prod/dcgm-exporter:$TAG
 
       - update_version_in_installkit
