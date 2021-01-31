@@ -40,6 +40,4 @@ ENV NO_SETCAP=
 COPY docker/dcgm-exporter-entrypoint.sh /usr/local/dcgm/dcgm-exporter-entrypoint.sh
 RUN chmod +x /usr/local/dcgm/dcgm-exporter-entrypoint.sh
 
-RUN yum -y update-minimal --security --sec-severity=Important --sec-severity=Critical
-
 ENTRYPOINT ["/usr/local/dcgm/dcgm-exporter-entrypoint.sh"]
