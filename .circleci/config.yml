@@ -69,6 +69,7 @@ jobs:
             docker build \
             	--build-arg "GOLANG_VERSION=1.14.2" \
             	--build-arg "DCGM_VERSION=2.0.13" \
+            	--build-arg "VERSION=2.0.13-2.1.1" \
             	--tag "gcr.io/run-ai-staging/dcgm-exporter:$TAG" \
             	--file docker/Dockerfile.ubi8 .
             docker push gcr.io/run-ai-staging/dcgm-exporter:$TAG
@@ -93,6 +94,7 @@ jobs:
             docker build \
             	--build-arg "GOLANG_VERSION=1.14.2" \
             	--build-arg "DCGM_VERSION=2.0.13" \
+            	--build-arg "VERSION=2.0.13-2.1.1" \
             	--tag "gcr.io/run-ai-prod/dcgm-exporter:$TAG" \
             	--file docker/Dockerfile.ubi8 .
             docker push gcr.io/run-ai-prod/dcgm-exporter:$TAG
