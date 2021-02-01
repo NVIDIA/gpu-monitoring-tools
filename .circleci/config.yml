@@ -115,7 +115,7 @@ workflows:
           filters:
             branches:
               only:
-              - base-image-fixes
+              - master
               - ubi2
       - deploy-production:
           requires:
