@@ -67,8 +67,8 @@ func (c *DCGMCollector) GetMetrics() ([][]Metric, error) {
 			return nil, err
 		}
 
-		metrics[i] = ToMetric(vals, c.Counters, deviceInfo)
-		metrics[i] = c.addLastNotIdleMetric(deviceInfo, metrics[i])
+		gpuMetrics := ToMetric(vals, c.Counters, deviceInfo)
+		metrics[i] = c.addRunaiMetrics(deviceInfo, gpuMetrics)
 	}
 
 	return metrics, nil
@@ -97,8 +97,9 @@ func ToMetric(values []dcgm.FieldValue_v1, counter []Counter, d dcgm.Device) []M
 	return metrics
 }
 
-func (c *DCGMCollector) addLastNotIdleMetric(d dcgm.Device, metrics []Metric) []Metric {
+func (c *DCGMCollector) addRunaiMetrics(d dcgm.Device, metrics []Metric) []Metric {
 
+	// Add last not idle time for GPU
 	for _, metric := range metrics {
 		if metric.Name != "DCGM_FI_DEV_GPU_UTIL" {
 			continue
@@ -124,6 +125,20 @@ func (c *DCGMCollector) addLastNotIdleMetric(d dcgm.Device, metrics []Metric) []
 		}
 		metrics = append(metrics, m)
 	}
+
+	// Add GPU model for metric
+	m := Metric{
+		Name:      "DCGM_GPU_MODEL",
+		Value:     "1",
+		GPU:       fmt.Sprintf("%d", d.GPU),
+		GPUUUID:   d.UUID,
+		GPUDevice: fmt.Sprintf("nvidia%d", d.GPU),
+
+		Attributes: map[string]string{
+			"gpu_model": d.Identifiers.Model,
+		},
+	}
+	metrics = append(metrics, m)
 	return metrics
 }
 
