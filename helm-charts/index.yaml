@@ -2,6 +2,27 @@ apiVersion: v1
 entries:
   dcgm-exporter:
   - apiVersion: v2
+    appVersion: 2.3.1
+    created: "2021-03-05T11:01:05.58487913-07:00"
+    description: A Helm chart for DCGM exporter
+    digest: 6433d5e1682cabf9bf40a6d0da22b72724050e901c4402d1d80015008c6b009c
+    home: https://github.com/nvidia/gpu-monitoring-tools/
+    icon: https://assets.nvidiagrid.net/ngc/logos/DCGM.png
+    keywords:
+    - gpu
+    - cuda
+    - compute
+    - monitoring
+    - telemetry
+    - tesla
+    kubeVersion: '>= 1.13.0-0'
+    name: dcgm-exporter
+    sources:
+    - https://gitlab.com/nvidia/container-toolkit/gpu-monitoring-tools
+    urls:
+    - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/dcgm-exporter-2.3.1.tgz
+    version: 2.3.1
+  - apiVersion: v2
     appVersion: 2.3.0
     created: "2021-02-26T06:57:12.61037066-07:00"
     description: A Helm chart for DCGM exporter
@@ -189,4 +210,4 @@ entries:
     urls:
     - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/prometheus-operator-0.0.15.tgz
     version: 0.0.15
-generated: "2021-02-26T06:57:12.60968138-07:00"
+generated: "2021-03-05T11:01:05.584322172-07:00"
