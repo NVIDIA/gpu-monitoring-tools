@@ -112,7 +112,7 @@ func ToMetric(values []dcgm.FieldValue_v1, c []Counter, d dcgm.Device, instanceI
 			UUID:      uuid,
 			GPU:       fmt.Sprintf("%d", d.GPU),
 			GPUUUID:   d.UUID,
-			GPUDevice: fmt.Sprintf("nvidia%d", d.GPU),
+			GPUDevice: d.Identifiers.Model,
 			Hostname:  hostname,
 
 			Attributes: map[string]string{},
