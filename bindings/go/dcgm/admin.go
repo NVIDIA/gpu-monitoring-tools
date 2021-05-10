@@ -304,11 +304,11 @@ func checkHostengineVersion() (err error) {
 
 	heVersion, err := semver.NewVersion(he[1])
 	if err != nil {
-		return fmt.Errorf("Could not determine remote version ", err)
+		return fmt.Errorf("Could not determine remote version: %v", err)
 	}
 	myVersion, err := semver.NewVersion(my[1])
 	if err != nil {
-		return fmt.Errorf("Could not determine local version ", err)
+		return fmt.Errorf("Could not determine local version: %v", err)
 	}
 	if heVersion.Major() != myVersion.Major() {
 		return fmt.Errorf("remote %v != local %v", he[1], my[1])
