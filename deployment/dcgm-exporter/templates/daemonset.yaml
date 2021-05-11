@@ -96,10 +96,12 @@ spec:
         {{- toYaml .Values.extraVolumeMounts | nindent 8 }}
         {{- end }}
         livenessProbe:
-          {{ toYaml .Values.livenessProbe | indent 10 }}
+         {{ toYaml .Values.livenessProbe | nindent 10 }}
         readinessProbe:
-          {{ toYaml .Values.readinessProbe | indent 10 }}
+         {{ toYaml .Values.readinessProbe | nindent 10 }}
         {{- if .Values.resources }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         {{- end }}
+
+

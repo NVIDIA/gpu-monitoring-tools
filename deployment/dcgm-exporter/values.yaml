@@ -109,7 +109,7 @@ livenessProbe:
   httpGet:
     path: /health
     port: 9400
-  initialDelaySeconds: 5
+  initialDelaySeconds: 10
   periodSeconds: 5
 
 readinessProbe:
