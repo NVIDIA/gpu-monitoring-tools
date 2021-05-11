@@ -103,5 +103,3 @@ spec:
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         {{- end }}
-
-
