@@ -104,3 +104,16 @@ extraVolumeMounts: []
 extraEnv: []
 #- name: EXTRA_VAR
 #  value: "TheStringValue"
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 9400
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 9400
+  initialDelaySeconds: 5

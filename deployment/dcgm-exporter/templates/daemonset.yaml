@@ -96,16 +96,9 @@ spec:
         {{- toYaml .Values.extraVolumeMounts | nindent 8 }}
         {{- end }}
         livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.service.port }}
-          initialDelaySeconds: 5
-          periodSeconds: 5
+          {{ toYaml .Values.livenessProbe | indent 10 }}
         readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.service.port }}
-          initialDelaySeconds: 5
+          {{ toYaml .Values.readinessProbe | indent 10 }}
         {{- if .Values.resources }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
