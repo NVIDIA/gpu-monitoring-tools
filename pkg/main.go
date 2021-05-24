@@ -56,7 +56,7 @@ func main() {
 		"MIG mode is disabled.\n\tg = Monitor all GPUs\n\ti = Monitor all GPU instances\n\tg+i = " +
 		"monitor all GPUs and GPU instances\n\tg:0,1 = monitor GPUs 0 and 1\n\ti:0,2-4 = monitor GPU " +
 		"instances 0, 2, 3, and 4.\n\n\tNOTE 1: i cannot be specified unless MIG mode is enabled.\n" +
-		"NOTE 2: Any time indices are specified, those indicies must exist on the system.\nNOTE 3: " +
+		"NOTE 2: Any time indices are specified, those indices must exist on the system.\nNOTE 3: " +
 		"In in MIG mode -f and -g+i (without indices) effectively have the same result."
 
 	c.Flags = []cli.Flag{
