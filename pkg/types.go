@@ -72,6 +72,7 @@ type Config struct {
 	RemoteHEInfo        string
 	Devices             DeviceOptions
 	NoHostname          bool
+	Models              bool
 }
 
 type Transform interface {

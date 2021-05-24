@@ -113,7 +113,7 @@ func (m *MetricsPipeline) Run(out chan string, stop chan interface{}, wg *sync.W
 }
 
 func (m *MetricsPipeline) run() (string, error) {
-	metrics, err := m.gpuCollector.GetMetrics()
+	metrics, err := m.gpuCollector.GetMetrics(m.config)
 	if err != nil {
 		return "", fmt.Errorf("Failed to collect metrics with error: %v", err)
 	}
@@ -167,8 +167,7 @@ func FormatCounters(c []Counter) (string, error) {
 
 var metricsFormat = `
 {{ range $dev := . }}{{ range $val := $dev }}
-{{ $val.Name }}{gpu="{{ $val.GPU }}",{{ $val.UUID }}="{{ $val.GPUUUID }}",device="{{ $val.GPUDevice }}"
-
+{{ $val.Name }}{gpu="{{ $val.GPU }}",{{ $val.UUID }}="{{ $val.GPUUUID }}",device="{{ $val.GPUDevice }}"{{if $val.GPUModel }},model="{{ $val.GPUModel }}"{{end}}
 {{- range $k, $v := $val.Attributes -}}
 	,{{ $k }}="{{ $v }}"
 {{- end -}}

@@ -42,6 +42,7 @@ var (
 	CLIRemoteHEInfo        = "remote-hostengine-info"
 	CLIDevices             = "devices"
 	CLINoHostname          = "no-hostname"
+	CLIModels              = "models"
 )
 
 func main() {
@@ -121,6 +122,13 @@ func main() {
 			Value:   false,
 			Usage:   "Omit the hostname information from the output, matching older versions.",
 			EnvVars: []string{"DCGM_EXPORTER_NO_HOSTNAME"},
+		},
+		&cli.BoolFlag{
+			Name:    CLIModels,
+			Aliases: []string{"m"},
+			Value:   false,
+			Usage:   "Enable to display GPU Models",
+			EnvVars: []string{"DCGM_EXPORTER_MODELS_STR"},
 		},
 	}
 
@@ -309,5 +317,6 @@ func contextToConfig(c *cli.Context) (*Config, error) {
 		RemoteHEInfo:        c.String(CLIRemoteHEInfo),
 		Devices:             dOpt,
 		NoHostname:          c.Bool(CLINoHostname),
+		Models:              c.Bool(CLIModels),
 	}, nil
 }

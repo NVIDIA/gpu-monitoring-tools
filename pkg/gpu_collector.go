@@ -60,7 +60,7 @@ func (c *DCGMCollector) Cleanup() {
 	}
 }
 
-func (c *DCGMCollector) GetMetrics() ([][]Metric, error) {
+func (c *DCGMCollector) GetMetrics(config *Config) ([][]Metric, error) {
 	monitoringInfo := GetMonitoredEntities(c.SysInfo)
 	count := len(monitoringInfo)
 
@@ -73,7 +73,7 @@ func (c *DCGMCollector) GetMetrics() ([][]Metric, error) {
 		}
 
 		// InstanceInfo will be nil for GPUs
-		metrics[i] = ToMetric(vals, c.Counters, mi.DeviceInfo, mi.InstanceInfo, c.UseOldNamespace, c.Hostname)
+		metrics[i] = ToMetric(vals, c.Counters, mi.DeviceInfo, mi.InstanceInfo, c.UseOldNamespace, c.Hostname, config.Models)
 	}
 
 	return metrics, nil
@@ -92,7 +92,7 @@ func ShouldIgnoreValue(fieldId dcgm.Short, isGpu bool) bool {
 	return true
 }
 
-func ToMetric(values []dcgm.FieldValue_v1, c []Counter, d dcgm.Device, instanceInfo *GpuInstanceInfo, useOld bool, hostname string) []Metric {
+func ToMetric(values []dcgm.FieldValue_v1, c []Counter, d dcgm.Device, instanceInfo *GpuInstanceInfo, useOld bool, hostname string, models bool) []Metric {
 	var metrics []Metric
 
 	for i, val := range values {
@@ -113,10 +113,14 @@ func ToMetric(values []dcgm.FieldValue_v1, c []Counter, d dcgm.Device, instanceI
 			GPU:       fmt.Sprintf("%d", d.GPU),
 			GPUUUID:   d.UUID,
 			GPUDevice: fmt.Sprintf("nvidia%d", d.GPU),
-			GPUModel:  d.Identifiers.Model,
 			Hostname:  hostname,
 
 			Attributes: map[string]string{},
+		}
+		if models {
+			m.GPUModel = d.Identifiers.Model
+		} else {
+			m.GPUModel = ""
 		}
 		if instanceInfo != nil {
 			m.MigProfile = instanceInfo.ProfileName
