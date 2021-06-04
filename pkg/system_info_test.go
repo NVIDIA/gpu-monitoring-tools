@@ -18,9 +18,10 @@ package main
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (

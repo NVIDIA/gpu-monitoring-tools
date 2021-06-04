@@ -18,8 +18,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 	"math/rand"
+
+	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 )
 
 func NewGroup() (dcgm.GroupHandle, func(), error) {
