@@ -102,6 +102,10 @@ jobs:
       - update_version_in_installkit
 
       - run:
+          name: chmod
+          command: chmod +x scripts/*.sh
+
+      - run:
           name: Push to RedHat
           command: scripts/push-to-redhat.sh
           environment:
