@@ -101,6 +101,16 @@ jobs:
 
       - update_version_in_installkit
 
+      - run:
+          name: Push to RedHat
+          command: scripts/push-to-redhat.sh
+          environment:
+            CIRCLE_SHA1: <<pipeline.git.revision>>
+            CIRCLE_TAG: <<pipeline.git.tag>>
+            UPLOAD_TARGET: prod
+            GCLOUD_PROJECT: run-ai-prod
+            IMAGE_ID: dcgm-exporter
+
 workflows:
   version: 2
   build_and_deploy:
