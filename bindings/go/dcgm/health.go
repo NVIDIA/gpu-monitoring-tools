@@ -49,7 +49,7 @@ func healthCheckByGpuId(gpuId uint) (deviceHealth DeviceHealth, err error) {
 	}
 
 	var healthResults C.dcgmHealthResponse_v4
-	healthResults.version = makeVersion2(unsafe.Sizeof(healthResults))
+	healthResults.version = makeVersion4(unsafe.Sizeof(healthResults))
 
 	result := C.dcgmHealthCheck(handle.handle, groupId.handle, (*C.dcgmHealthResponse_t)(unsafe.Pointer(&healthResults)))
 
