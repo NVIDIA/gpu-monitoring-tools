@@ -56,6 +56,9 @@ securityContext:
      add: ["SYS_ADMIN"]
   # readOnlyRootFilesystem: true
 
+## Set pod priorityClassName
+# priorityClassName: ""
+
 service:
   type: ClusterIP
   port: 9400

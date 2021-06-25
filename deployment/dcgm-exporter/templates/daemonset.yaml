@@ -42,6 +42,9 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName | quote }}
+      {{- end }}
       {{- if .Values.affinity }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}
