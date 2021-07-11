@@ -1,0 +1,30 @@
+on:
+  push:
+    branches-ignore:
+      - 'master'
+name: Verify Jira Ticket Exists
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Jira ticket integration
+    steps:
+      - name: Login
+        uses: atlassian/gajira-login@master
+        env:
+          JIRA_BASE_URL: https://runai.atlassian.net/
+          JIRA_USER_EMAIL: jira-bot@run.ai
+          JIRA_API_TOKEN: ${{ secrets.JIRA_SECRET }}
+      - name: Find Jira ticket in branch name
+        id: ticket
+        uses: atlassian/gajira-find-issue-key@master
+        with:
+          from: branch
+      - name: Verify Jira ticket was found
+        run: |
+          if [ -z ${{steps.ticket.outputs.issue}} ]; then
+            echo "failed to find jira ticket in branch name"
+            exit 1
+          else
+            echo "found jira ticket: ${{steps.ticket.outputs.issue}}"
+          fi
