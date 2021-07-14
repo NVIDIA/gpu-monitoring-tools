@@ -17,7 +17,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_SECRET }}
       - name: Find Jira ticket in branch name
         id: ticket
-        uses: atlassian/gajira-find-issue-key@master
+        uses: run-ai/gajira-find-issue-key@master
         with:
           from: branch
       - name: Verify Jira ticket was found
