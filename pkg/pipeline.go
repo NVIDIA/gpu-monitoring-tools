@@ -39,7 +39,7 @@ func NewMetricsPipeline(c *Config) (*MetricsPipeline, func(), error) {
 		return nil, func() {}, err
 	}
 
-	gpuCollector, cleanup, err := NewDCGMCollector(counters)
+	gpuCollector, cleanup, err := NewDCGMCollector(counters, c)
 	if err != nil {
 		return nil, func() {}, err
 	}
@@ -52,8 +52,9 @@ func NewMetricsPipeline(c *Config) (*MetricsPipeline, func(), error) {
 	return &MetricsPipeline{
 			config: c,
 
-			metricsFormat: template.Must(template.New("metrics").Parse(metricsFormat)),
-			countersText:  countersText,
+			metricsFormat:    template.Must(template.New("metrics").Parse(metricsFormat)),
+			migMetricsFormat: template.Must(template.New("migMetrics").Parse(migMetricsFormat)),
+			countersText:     countersText,
 
 			gpuCollector:    gpuCollector,
 			transformations: transformations,
@@ -72,8 +73,9 @@ func NewMetricsPipelineWithGPUCollector(c *Config, collector *DCGMCollector) (*M
 	return &MetricsPipeline{
 		config: c,
 
-		metricsFormat: template.Must(template.New("metrics").Parse(metricsFormat)),
-		countersText:  countersText,
+		metricsFormat:    template.Must(template.New("metrics").Parse(metricsFormat)),
+		migMetricsFormat: template.Must(template.New("migMetrics").Parse(migMetricsFormat)),
+		countersText:     countersText,
 
 		gpuCollector: collector,
 	}, func() {}, nil
@@ -117,13 +119,13 @@ func (m *MetricsPipeline) run() (string, error) {
 	}
 
 	for _, transform := range m.transformations {
-		err := transform.Process(metrics)
+		err := transform.Process(metrics, m.gpuCollector.SysInfo)
 		if err != nil {
 			return "", fmt.Errorf("Failed to transform metrics for transorm %s: %v", err, transform.Name())
 		}
 	}
 
-	formated, err := FormatMetrics(m.countersText, m.metricsFormat, metrics)
+	formated, err := FormatMetrics(m.countersText, m.migMetricsFormat, metrics)
 	if err != nil {
 		return "", fmt.Errorf("Failed to format metrics with error: %v", err)
 	}
@@ -165,7 +167,19 @@ func FormatCounters(c []Counter) (string, error) {
 
 var metricsFormat = `
 {{ range $dev := . }}{{ range $val := $dev }}
-{{ $val.Name }}{gpu="{{ $val.GPU }}",UUID="{{ $val.GPUUUID }}",device="{{ $val.GPUDevice }}"
+{{ $val.Name }}{gpu="{{ $val.GPU }}",{{ $val.UUID }}="{{ $val.GPUUUID }}",device="{{ $val.GPUDevice }}",modelName="{{ $val.GPUModelName }}"
+
+{{- range $k, $v := $val.Attributes -}}
+	,{{ $k }}="{{ $v }}"
+{{- end -}}
+
+} {{ $val.Value }}
+{{- end }}
+{{ end }}`
+
+var migMetricsFormat = `
+{{ range $dev := . }}{{ range $val := $dev }}
+{{ $val.Name }}{gpu="{{ $val.GPU }}",{{ $val.UUID }}="{{ $val.GPUUUID }}",device="{{ $val.GPUDevice }}",modelName="{{ $val.GPUModelName }}"{{if $val.MigProfile}},GPU_I_PROFILE="{{ $val.MigProfile }}",GPU_I_ID="{{ $val.GPUInstanceID }}"{{end}}{{if $val.Hostname }},Hostname="{{ $val.Hostname }}"{{end}}
 
 {{- range $k, $v := $val.Attributes -}}
 	,{{ $k }}="{{ $v }}"

@@ -22,17 +22,34 @@ import (
 	"time"
 
 	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
+	"os"
 	"github.com/sirupsen/logrus"
 )
 
-func NewDCGMCollector(c []Counter) (*DCGMCollector, func(), error) {
+func NewDCGMCollector(c []Counter, config *Config) (*DCGMCollector, func(), error) {
+	sysInfo, err := InitializeSystemInfo(config.Devices, config.UseFakeGpus)
+	if err != nil {
+		return nil, func() {}, err
+	}
+
+	hostname := ""
+	if config.NoHostname == false {
+		hostname, err = os.Hostname()
+		if err != nil {
+			return nil, func() {}, err
+		}
+	}
+
 	collector := &DCGMCollector{
-		Counters:             c,
-		DeviceFields:         NewDeviceFields(c),
+		Counters:        c,
+		DeviceFields:    NewDeviceFields(c),
+		UseOldNamespace: config.UseOldNamespace,
+		SysInfo:         sysInfo,
+		Hostname:        hostname,
 		GpuToLastNotIdleTime: map[string]int64{},
 	}
 
-	cleanups, err := SetupDcgmFieldsWatch(collector.DeviceFields)
+	cleanups, err := SetupDcgmFieldsWatch(collector.DeviceFields, sysInfo)
 	if err != nil {
 		return nil, func() {}, err
 	}
@@ -49,48 +66,57 @@ func (c *DCGMCollector) Cleanup() {
 }
 
 func (c *DCGMCollector) GetMetrics() ([][]Metric, error) {
-	count, err := dcgm.GetAllDeviceCount()
-	if err != nil {
-		return nil, err
-	}
+	monitoringInfo := GetMonitoredEntities(c.SysInfo)
+	count := len(monitoringInfo)
 
 	metrics := make([][]Metric, count)
-	for i := uint(0); i < count; i++ {
-		// TODO: This call could be cached
-		deviceInfo, err := dcgm.GetDeviceInfo(i)
+
+	for i, mi := range monitoringInfo {
+		vals, err := dcgm.EntityGetLatestValues(mi.Entity.EntityGroupId, mi.Entity.EntityId, c.DeviceFields)
 		if err != nil {
 			return nil, err
 		}
 
-		vals, err := dcgm.GetLatestValuesForFields(i, c.DeviceFields)
-		if err != nil {
-			return nil, err
-		}
-
-		gpuMetrics := ToMetric(vals, c.Counters, deviceInfo)
+		// InstanceInfo will be nil for GPUs
+		gpuMetrics := ToMetric(vals, c.Counters, mi.DeviceInfo, mi.InstanceInfo, c.UseOldNamespace, c.Hostname)
 		metrics[i] = c.addRunaiMetrics(deviceInfo, gpuMetrics)
 	}
 
 	return metrics, nil
 }
 
-func ToMetric(values []dcgm.FieldValue_v1, counter []Counter, d dcgm.Device) []Metric {
+func ToMetric(values []dcgm.FieldValue_v1, c []Counter, d dcgm.Device, instanceInfo *GpuInstanceInfo, useOld bool, hostname string) []Metric {
 	var metrics []Metric
+
 	for i, val := range values {
 		v := ToString(val)
-		// Filter out counters with no value
+		// Filter out counters with no value and ignored fields for this entity
 		if v == SkipDCGMValue {
 			continue
 		}
+		uuid := "UUID"
+		if useOld {
+			uuid = "uuid"
+		}
 		m := Metric{
-			Name:  counter[i].FieldName,
+			Name:  c[i].FieldName,
 			Value: v,
 
-			GPU:       fmt.Sprintf("%d", d.GPU),
-			GPUUUID:   d.UUID,
-			GPUDevice: fmt.Sprintf("nvidia%d", d.GPU),
+			UUID:         uuid,
+			GPU:          fmt.Sprintf("%d", d.GPU),
+			GPUUUID:      d.UUID,
+			GPUDevice:    fmt.Sprintf("nvidia%d", d.GPU),
+			GPUModelName: d.Identifiers.Model,
+			Hostname:     hostname,
 
 			Attributes: map[string]string{},
+		}
+		if instanceInfo != nil {
+			m.MigProfile = instanceInfo.ProfileName
+			m.GPUInstanceID = fmt.Sprintf("%d", instanceInfo.Info.NvmlInstanceId)
+		} else {
+			m.MigProfile = ""
+			m.GPUInstanceID = ""
 		}
 		metrics = append(metrics, m)
 	}

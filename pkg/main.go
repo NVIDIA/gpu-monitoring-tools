@@ -19,6 +19,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -36,6 +38,11 @@ var (
 	CLICollectInterval     = "collect-interval"
 	CLIKubernetes          = "kubernetes"
 	CLIKubernetesGPUIDType = "kubernetes-gpu-id-type"
+	CLIUseOldNamespace     = "use-old-namespace"
+	CLIRemoteHEInfo        = "remote-hostengine-info"
+	CLIDevices             = "devices"
+	CLINoHostname          = "no-hostname"
+	CLIUseFakeGpus         = "fake-gpus"
 )
 
 func main() {
@@ -43,6 +50,15 @@ func main() {
 	c.Name = "DCGM Exporter"
 	c.Usage = "Generates GPU metrics in the prometheus format"
 	c.Version = BuildVersion
+
+	DeviceUsageStr := "Specify which devices dcgm-exporter monitors. Possible values: [%s] or [%s[:id1[,-id2...]]" +
+		".\nIf an id list is used, then devices with match IDs must exist on the system. For example:\n\tf " +
+		"(default) = monitor all GPU instances in MIG mode, all GPUs if MIG mode is disabled.\n\tg = Monitor all " +
+		"GPUs\n\ti = Monitor all GPU instances\n\tg:0,1 = monitor GPUs 0 and 1\n\ti:0,2-4 = monitor GPU " +
+		"instances 0, 2, 3, and 4.\n\n\tNOTE 1: i cannot be specified unless MIG mode is enabled.\n" +
+		"NOTE 2: Any time indices are specified, those indicies must exist on the system.\nNOTE 3: " +
+		"In in MIG mode, only -f or -i with a range can be specified. GPUs are not assigned to pods " +
+		"and therefore reporting must occur at the GPU instance level."
 
 	c.Flags = []cli.Flag{
 		&cli.StringFlag{
@@ -62,7 +78,7 @@ func main() {
 		&cli.IntFlag{
 			Name:    CLICollectInterval,
 			Aliases: []string{"c"},
-			Value:   2000,
+			Value:   30000,
 			Usage:   "Interval of time at which point metrics are collected. Unit is milliseconds (ms).",
 			EnvVars: []string{"DCGM_EXPORTER_INTERVAL"},
 		},
@@ -73,11 +89,45 @@ func main() {
 			Usage:   "Enable kubernetes mapping metrics to kubernetes pods",
 			EnvVars: []string{"DCGM_EXPORTER_KUBERNETES"},
 		},
+		&cli.BoolFlag{
+			Name:    CLIUseOldNamespace,
+			Aliases: []string{"o"},
+			Value:   false,
+			Usage:   "Use old 1.x namespace",
+			EnvVars: []string{"DCGM_EXPORTER_USE_OLD_NAMESPACE"},
+		},
+		&cli.StringFlag{
+			Name:    CLIRemoteHEInfo,
+			Aliases: []string{"r"},
+			Value:   "localhost:5555",
+			Usage:   "Connect to remote hostengine at <HOST>:<PORT>",
+			EnvVars: []string{"DCGM_REMOTE_HOSTENGINE_INFO"},
+		},
 		&cli.StringFlag{
 			Name:    CLIKubernetesGPUIDType,
 			Value:   string(GPUUID),
 			Usage:   fmt.Sprintf("Choose Type of GPU ID to use to map kubernetes resources to pods. Possible values: '%s', '%s'", GPUUID, DeviceName),
 			EnvVars: []string{"DCGM_EXPORTER_KUBERNETES_GPU_ID_TYPE"},
+		},
+		&cli.StringFlag{
+			Name:    CLIDevices,
+			Aliases: []string{"d"},
+			Value:   FlexKey,
+			Usage:   fmt.Sprintf(DeviceUsageStr, FlexKey, GPUKey, GPUInstanceKey),
+			EnvVars: []string{"DCGM_EXPORTER_DEVICES_STR"},
+		},
+		&cli.BoolFlag{
+			Name:    CLINoHostname,
+			Aliases: []string{"n"},
+			Value:   false,
+			Usage:   "Omit the hostname information from the output, matching older versions.",
+			EnvVars: []string{"DCGM_EXPORTER_NO_HOSTNAME"},
+		},
+		&cli.BoolFlag{
+			Name:    CLIUseFakeGpus,
+			Value:   false,
+			Usage:   "Accept GPUs that are fake, for testing purposes only",
+			EnvVars: []string{"DCGM_EXPORTER_USE_FAKE_GPUS"},
 		},
 	}
 
@@ -94,14 +144,29 @@ func Run(c *cli.Context) error {
 restart:
 
 	logrus.Info("Starting dcgm-exporter")
-	config := contextToConfig(c)
-
-	cleanup, err := dcgm.Init(dcgm.Embedded)
-	defer cleanup()
+	config, err := contextToConfig(c)
 	if err != nil {
-		logrus.Fatal(err)
+		return err
+	}
+
+	if config.UseRemoteHE {
+		logrus.Info("Attemping to connect to remote hostengine at ", config.RemoteHEInfo)
+		cleanup, err := dcgm.Init(dcgm.Standalone, config.RemoteHEInfo, "0")
+		defer cleanup()
+		if err != nil {
+			logrus.Fatal(err)
+		}
+	} else {
+		cleanup, err := dcgm.Init(dcgm.Embedded)
+		defer cleanup()
+		if err != nil {
+			logrus.Fatal(err)
+		}
 	}
 	logrus.Info("DCGM successfully initialized!")
+
+	dcgm.FieldsInit()
+	defer dcgm.FieldsTerm()
 
 	_, err = dcgm.GetSupportedMetricGroups(0)
 	if err != nil {
@@ -154,7 +219,137 @@ restart:
 	return nil
 }
 
-func contextToConfig(c *cli.Context) *Config {
+func parseDeviceOptionsToken(token string, dOpt *DeviceOptions) error {
+	letterAndRange := strings.Split(token, ":")
+	count := len(letterAndRange)
+	if count > 2 {
+		return fmt.Errorf("Invalid ranged device option '%s': there can only be one specified range", token)
+	}
+
+	letter := letterAndRange[0]
+	if letter == FlexKey {
+		dOpt.Flex = true
+		if count > 1 {
+			return fmt.Errorf("No range can be specified with the flex option 'f'")
+		}
+	} else if letter == GPUKey || letter == GPUInstanceKey {
+		var indices []int
+		if count == 1 {
+			// No range means all present devices of the type
+			indices = append(indices, -1)
+		} else {
+			numbers := strings.Split(letterAndRange[1], ",")
+			for _, numberOrRange := range numbers {
+				rangeTokens := strings.Split(numberOrRange, "-")
+				rangeTokenCount := len(rangeTokens)
+				if rangeTokenCount > 2 {
+					return fmt.Errorf("A range can only be '<number>-<number>', but found '%s'", numberOrRange)
+				} else if rangeTokenCount == 1 {
+					number, err := strconv.Atoi(rangeTokens[0])
+					if err != nil {
+						return err
+					}
+					indices = append(indices, number)
+				} else {
+					start, err := strconv.Atoi(rangeTokens[0])
+					if err != nil {
+						return err
+					}
+					end, err := strconv.Atoi(rangeTokens[1])
+					if err != nil {
+						return err
+					}
+
+					// Add the range to the indices
+					for i := start; i <= end; i++ {
+						indices = append(indices, i)
+					}
+				}
+			}
+		}
+
+		if letter == GPUKey {
+			dOpt.GpuRange = indices
+		} else {
+			dOpt.GpuInstanceRange = indices
+		}
+	} else {
+		return fmt.Errorf("The only valid options preceding ':<range>' are 'g' or 'i', but found '%s'", letter)
+	}
+
+	return nil
+}
+
+func parseDeviceOptions(c *cli.Context) (DeviceOptions, error) {
+	var dOpt DeviceOptions
+	devices := c.String(CLIDevices)
+
+	letterAndRange := strings.Split(devices, ":")
+	count := len(letterAndRange)
+	if count > 2 {
+		return dOpt, fmt.Errorf("Invalid ranged device option '%s': there can only be one specified range", devices)
+	}
+
+	letter := letterAndRange[0]
+	if letter == FlexKey {
+		dOpt.Flex = true
+		if count > 1 {
+			return dOpt, fmt.Errorf("No range can be specified with the flex option 'f'")
+		}
+	} else if letter == GPUKey || letter == GPUInstanceKey {
+		var indices []int
+		if count == 1 {
+			// No range means all present devices of the type
+			indices = append(indices, -1)
+		} else {
+			numbers := strings.Split(letterAndRange[1], ",")
+			for _, numberOrRange := range numbers {
+				rangeTokens := strings.Split(numberOrRange, "-")
+				rangeTokenCount := len(rangeTokens)
+				if rangeTokenCount > 2 {
+					return dOpt, fmt.Errorf("A range can only be '<number>-<number>', but found '%s'", numberOrRange)
+				} else if rangeTokenCount == 1 {
+					number, err := strconv.Atoi(rangeTokens[0])
+					if err != nil {
+						return dOpt, err
+					}
+					indices = append(indices, number)
+				} else {
+					start, err := strconv.Atoi(rangeTokens[0])
+					if err != nil {
+						return dOpt, err
+					}
+					end, err := strconv.Atoi(rangeTokens[1])
+					if err != nil {
+						return dOpt, err
+					}
+
+					// Add the range to the indices
+					for i := start; i <= end; i++ {
+						indices = append(indices, i)
+					}
+				}
+			}
+		}
+
+		if letter == GPUKey {
+			dOpt.GpuRange = indices
+		} else {
+			dOpt.GpuInstanceRange = indices
+		}
+	} else {
+		return dOpt, fmt.Errorf("The only valid options preceding ':<range>' are 'g' or 'i', but found '%s'", letter)
+	}
+
+	return dOpt, nil
+}
+
+func contextToConfig(c *cli.Context) (*Config, error) {
+	dOpt, err := parseDeviceOptions(c)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		CollectorsFile:      c.String(CLIFieldsFile),
 		Address:             c.String(CLIAddress),
@@ -162,5 +357,11 @@ func contextToConfig(c *cli.Context) *Config {
 		Kubernetes:          c.Bool(CLIKubernetes),
 		KubernetesGPUIdType: KubernetesGPUIDType(c.String(CLIKubernetesGPUIDType)),
 		CollectDCP:          true,
-	}
+		UseOldNamespace:     c.Bool(CLIUseOldNamespace),
+		UseRemoteHE:         c.IsSet(CLIRemoteHEInfo),
+		RemoteHEInfo:        c.String(CLIRemoteHEInfo),
+		Devices:             dOpt,
+		NoHostname:          c.Bool(CLINoHostname),
+		UseFakeGpus:         c.Bool(CLIUseFakeGpus),
+	}, nil
 }

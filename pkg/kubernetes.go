@@ -21,11 +21,12 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	podresourcesapi "k8s.io/kubernetes/pkg/kubelet/apis/podresources/v1alpha1"
+	podresourcesapi "k8s.io/kubelet/pkg/apis/podresources/v1alpha1"
 )
 
 var (
@@ -47,7 +48,7 @@ func (p *PodMapper) Name() string {
 	return "podMapper"
 }
 
-func (p *PodMapper) Process(metrics [][]Metric) error {
+func (p *PodMapper) Process(metrics [][]Metric, sysInfo SystemInfo) error {
 	_, err := os.Stat(socketPath)
 	if os.IsNotExist(err) {
 		logrus.Infof("No Kubelet socket, ignoring")
@@ -66,22 +67,29 @@ func (p *PodMapper) Process(metrics [][]Metric) error {
 		return err
 	}
 
-	deviceToPod := ToDeviceToPod(pods)
+	deviceToPod := ToDeviceToPod(pods, sysInfo)
 
 	// Note: for loop are copies the value, if we want to change the value
 	// and not the copy, we need to use the indexes
 	for i, device := range metrics {
 		for j, val := range device {
-			GPUID, err := val.getIDOfType(p.Config.KubernetesGPUIdType)
+			deviceId, err := val.getIDOfType(p.Config.KubernetesGPUIdType)
 			if err != nil {
 				return err
 			}
-			metrics[i][j].Attributes[podAttribute] = deviceToPod[GPUID].Name
-			metrics[i][j].Attributes[namespaceAttribute] = deviceToPod[GPUID].Namespace
-			metrics[i][j].Attributes[containerAttribute] = deviceToPod[GPUID].Container
-			metrics[i][j].Attributes["pod_name"] = deviceToPod[GPUID].Name
-			metrics[i][j].Attributes["pod_namespace"] = deviceToPod[GPUID].Namespace
-			metrics[i][j].Attributes["container_name"] = deviceToPod[GPUID].Container
+			if !p.Config.UseOldNamespace {
+				metrics[i][j].Attributes[podAttribute] = deviceToPod[deviceId].Name
+				metrics[i][j].Attributes[namespaceAttribute] = deviceToPod[deviceId].Namespace
+				metrics[i][j].Attributes[containerAttribute] = deviceToPod[deviceId].Container
+			} else {
+				metrics[i][j].Attributes[oldPodAttribute] = deviceToPod[deviceId].Name
+				metrics[i][j].Attributes[oldNamespaceAttribute] = deviceToPod[deviceId].Namespace
+				metrics[i][j].Attributes[oldContainerAttribute] = deviceToPod[deviceId].Container
+			}
+
+			metrics[i][j].Attributes["pod_name"] = deviceToPod[deviceId].Name
+			metrics[i][j].Attributes["pod_namespace"] = deviceToPod[deviceId].Namespace
+			metrics[i][j].Attributes["container_name"] = deviceToPod[deviceId].Container
 		}
 	}
 
@@ -119,15 +127,19 @@ func ListPods(conn *grpc.ClientConn) (*podresourcesapi.ListPodResourcesResponse,
 	return resp, nil
 }
 
-func ToDeviceToPod(devicePods *podresourcesapi.ListPodResourcesResponse) map[string]PodInfo {
+func ToDeviceToPod(devicePods *podresourcesapi.ListPodResourcesResponse, sysInfo SystemInfo) map[string]PodInfo {
 	deviceToPodMap := make(map[string]PodInfo)
 
 	for _, pod := range devicePods.GetPodResources() {
 		for _, container := range pod.GetContainers() {
 			for _, device := range container.GetDevices() {
 
-				if device.GetResourceName() != nvidiaResourceName {
-					continue
+				resourceName := device.GetResourceName()
+				if resourceName != nvidiaResourceName {
+					// Mig resources appear differently than GPU resources
+					if strings.HasPrefix(resourceName, nvidiaMigResourcePrefix) == false {
+						continue
+					}
 				}
 
 				podInfo := PodInfo{
@@ -137,7 +149,24 @@ func ToDeviceToPod(devicePods *podresourcesapi.ListPodResourcesResponse) map[str
 				}
 
 				for _, uuid := range device.GetDeviceIds() {
-					deviceToPodMap[uuid] = podInfo
+					if strings.HasPrefix(uuid, MIG_UUID_PREFIX) {
+						// MIG uuid for now at least is in the format MIG-GPU-<gpu uuid>/<gpu instance index>/<compute instance index>
+						// Remove the prefix and suffix to get the GPU's uuid
+						gpuUuid := uuid[len(MIG_UUID_PREFIX):]
+						index := strings.Index(gpuUuid, "/")
+						if index > -1 {
+							gIIdStr := gpuUuid[index+1:]
+							index2 := strings.Index(gIIdStr, "/")
+							gIIdStr = gIIdStr[0:index2]
+							gpuUuid = gpuUuid[0:index]
+
+							giIdentifier := GetGpuInstanceIdentifier(sysInfo, gpuUuid, gIIdStr)
+							deviceToPodMap[giIdentifier] = podInfo
+						}
+						deviceToPodMap[gpuUuid] = podInfo
+					} else {
+						deviceToPodMap[uuid] = podInfo
+					}
 				}
 			}
 		}

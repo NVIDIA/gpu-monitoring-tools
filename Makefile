@@ -16,19 +16,25 @@ DOCKER   ?= docker
 MKDIR    ?= mkdir
 REGISTRY ?= nvidia
 
-DCGM_VERSION   := 2.0.13
+DCGM_VERSION   := 2.1.8
 GOLANG_VERSION := 1.14.2
-VERSION        := 2.1.1
+VERSION        := 2.4.0-rc.3
 FULL_VERSION   := $(DCGM_VERSION)-$(VERSION)
+
+NON_TEST_FILES  := pkg/dcgm.go pkg/gpu_collector.go pkg/parser.go pkg/pipeline.go pkg/server.go pkg/system_info.go pkg/types.go pkg/utils.go pkg/kubernetes.go pkg/main.go
+MAIN_TEST_FILES := pkg/system_info_test.go
 
 .PHONY: all binary install check-format
 all: ubuntu18.04 ubuntu20.04 ubi8
 
 binary:
-	go build -o dcgm-exporter github.com/NVIDIA/gpu-monitoring-tools/pkg
+	cd pkg; go build
+
+test-main: $(NON_TEST_FILES) $(MAIN_TEST_FILES)
+	cd pkg; go test
 
 install: binary
-	install -m 557 dcgm-exporter /usr/bin/dcgm-exporter
+	install -m 557 pkg/dcgm-exporter /usr/bin/dcgm-exporter
 	install -m 557 -D ./etc/dcgm-exporter/default-counters.csv /etc/dcgm-exporter/default-counters.csv
 	install -m 557 -D ./etc/dcgm-exporter/dcp-metrics-included.csv /etc/dcgm-exporter/dcp-metrics-included.csv
 
@@ -73,3 +79,4 @@ ubi8:
 		--build-arg "VERSION=$(FULL_VERSION)" \
 		--tag "gcr.io/run-ai-lab/dcgm-exporter:$(FULL_VERSION)-ubi8" \
 		--file docker/Dockerfile.ubi8 .
+

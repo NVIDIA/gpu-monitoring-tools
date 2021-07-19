@@ -2,6 +2,8 @@
 
 This repository contains Golang bindings and DCGM-Exporter for gathering GPU telemetry in Kubernetes.
 
+**June 2021 - NOTICE: Some of the tools in this repository are graduating to their own repos. In the next few weeks both the DCGM Go bindings and the DCGM Exporter will be migrating to github.com/NVIDIA. This will allow for independent versioning, issues, MRs, etc. Efforts will be made to review the existing MRs and issues before the migration occurs.**
+
 ## Bindings
 
 Golang bindings are provided for the following two libraries:
@@ -18,7 +20,7 @@ The repository also contains DCGM-Exporter. It exposes GPU metrics exporter for 
 
 To gather metrics on a GPU node, simply start the `dcgm-exporter` container:
 ```
-$ docker run -d --gpus all --rm -p 9400:9400 nvidia/dcgm-exporter:2.0.13-2.1.1-ubuntu18.04
+$ docker run -d --gpus all --rm -p 9400:9400 nvcr.io/nvidia/k8s/dcgm-exporter:2.0.13-2.1.2-ubuntu18.04
 $ curl localhost:9400/metrics
 # HELP DCGM_FI_DEV_SM_CLOCK SM clock frequency (in MHz).
 # TYPE DCGM_FI_DEV_SM_CLOCK gauge

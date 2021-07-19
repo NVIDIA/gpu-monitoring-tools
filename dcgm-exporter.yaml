@@ -19,23 +19,23 @@ metadata:
   namespace: "runai"
   labels:
     app.kubernetes.io/name: "dcgm-exporter"
-    app.kubernetes.io/version: "2.1.1"
+    app.kubernetes.io/version: "2.4.0-rc.3"
 spec:
   updateStrategy:
     type: RollingUpdate
   selector:
     matchLabels:
       app.kubernetes.io/name: "dcgm-exporter"
-      app.kubernetes.io/version: "2.1.1"
+      app.kubernetes.io/version: "2.4.0-rc.3"
   template:
     metadata:
       labels:
         app.kubernetes.io/name: "dcgm-exporter"
-        app.kubernetes.io/version: "2.1.1"
+        app.kubernetes.io/version: "2.4.0-rc.3"
       name: "dcgm-exporter"
     spec:
       containers:
-      - image: "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:2.0.13-2.1.1-ubuntu18.04"
+      - image: "gcr.io/run-ai-lab/pod-gpu-metrics-exporter:2.1.8-2.4.0-rc.3-ubuntu18.04"
         env:
         - name: "DCGM_EXPORTER_LISTEN"
           value: ":9400"
@@ -65,11 +65,11 @@ metadata:
   name: "dcgm-exporter"
   labels:
     app.kubernetes.io/name: "dcgm-exporter"
-    app.kubernetes.io/version: "2.1.1"
+    app.kubernetes.io/version: "2.4.0-rc.3"
 spec:
   selector:
     app.kubernetes.io/name: "dcgm-exporter"
-    app.kubernetes.io/version: "2.1.1"
+    app.kubernetes.io/version: "2.4.0-rc.3"
   ports:
   - name: "metrics"
     port: 9400
