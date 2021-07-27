@@ -2,6 +2,27 @@ apiVersion: v1
 entries:
   dcgm-exporter:
   - apiVersion: v2
+    appVersion: 2.4.0
+    created: "2021-07-27T13:37:10.892729835-06:00"
+    description: A Helm chart for DCGM exporter
+    digest: 03b4d7283d4c2037aea87c673a7b5405450eee40ad2dc9bb65c56acd8bd1e1c8
+    home: https://github.com/nvidia/gpu-monitoring-tools/
+    icon: https://assets.nvidiagrid.net/ngc/logos/DCGM.png
+    keywords:
+    - gpu
+    - cuda
+    - compute
+    - monitoring
+    - telemetry
+    - tesla
+    kubeVersion: '>= 1.13.0-0'
+    name: dcgm-exporter
+    sources:
+    - https://gitlab.com/nvidia/container-toolkit/gpu-monitoring-tools
+    urls:
+    - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/dcgm-exporter-2.4.0.tgz
+    version: 2.4.0
+  - apiVersion: v2
     appVersion: 2.4.0-rc.2
     created: "2021-04-13T11:11:01.891178781-05:00"
     description: A Helm chart for DCGM exporter
@@ -200,7 +221,8 @@ entries:
       name: grafana
       repository: https://s3-eu-west-1.amazonaws.com/coreos-charts/stable/
       version: 0.0.24
-    description: Manifests, dashboards, and alerting rules for end-to-end Kubernetes cluster monitoring.
+    description: Manifests, dashboards, and alerting rules for end-to-end Kubernetes
+      cluster monitoring.
     digest: 1a5c3ac631bbc5a41475ace1c02fbf409987cd3b34ecf498a6c192a58acd956f
     maintainers:
     - email: mgoodness@gmail.com
@@ -216,7 +238,8 @@ entries:
   prometheus-operator:
   - apiVersion: v1
     created: "2020-10-20T15:47:20.423930032-07:00"
-    description: Provides easy monitoring definitions for Kubernetes services, and deployment and management of Prometheus instances.
+    description: Provides easy monitoring definitions for Kubernetes services, and
+      deployment and management of Prometheus instances.
     digest: 77fc8daddc0544cf90c0686e4c63a8ee085c75a685d974756ae59ffd9de179d9
     maintainers:
     - email: mgoodness@gmail.com
@@ -229,4 +252,4 @@ entries:
     urls:
     - https://nvidia.github.io/gpu-monitoring-tools/helm-charts/prometheus-operator-0.0.15.tgz
     version: 0.0.15
-generated: "2021-04-13T11:11:01.888455879-05:00"
+generated: "2021-07-27T13:37:10.891405282-06:00"
