@@ -18,7 +18,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/NVIDIA/go-dcgm/pkg/dcgm"
+	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 	"math/rand"
 )
 

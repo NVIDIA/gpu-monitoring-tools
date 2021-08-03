@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/NVIDIA/go-dcgm/pkg/dcgm"
+	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,7 +56,8 @@ func testDCGMCollector(t *testing.T, counters []Counter) (*DCGMCollector, func()
 	require.Len(t, out[0], len(counters))
 
 	for i, dev := range out {
-		for _, metric := range dev {
+		for j, metric := range dev {
+			require.Equal(t, metric.Name, counters[j].FieldName)
 			require.Equal(t, metric.GPU, fmt.Sprintf("%d", i))
 
 			require.NotEmpty(t, metric.Value)
