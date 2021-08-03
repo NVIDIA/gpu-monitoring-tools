@@ -19,7 +19,7 @@ package main
 import (
 	"testing"
 
-	"github.com/NVIDIA/go-dcgm/pkg/dcgm"
+	"github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm"
 	"github.com/stretchr/testify/require"
 )
 
