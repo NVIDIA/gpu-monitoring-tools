@@ -1,3 +1,12 @@
+# FINAL UPDATE: August 2021 - This repository has been deprecated. 
+## The projects have been moved to their own repositories:
+
+- [NVML Go bindings](https://www.github.com/NVIDIA/go-nvml)
+- [DCGM Go bindings](https://www.github.com/NVIDIA/go-dcgm)
+- [DCGM Exporter](https://www.github.com/NVIDIA/dcgm-exporter)
+
+## This repository will exist for a time to allow for migration to the new repositories.
+
 # NVIDIA GPU Monitoring Tools
 
 This repository contains Golang bindings and DCGM-Exporter for gathering GPU telemetry in Kubernetes.
