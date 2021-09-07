@@ -28,13 +28,13 @@ replace (
 )
 
 require (
-	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm v0.0.0-00010101000000-000000000000
+	github.com/NVIDIA/gpu-monitoring-tools v0.0.0-20210817155834-f476d8a022cf // indirect
+	github.com/NVIDIA/gpu-monitoring-tools/bindings/go/dcgm v0.0.0-20210325210537-29b4f1784f18
 	github.com/gorilla/mux v1.8.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/urfave/cli/v2 v2.3.0
 	google.golang.org/grpc v1.35.0
 	k8s.io/kubelet v0.20.2
-	k8s.io/kubernetes v1.18.2
+	k8s.io/kubernetes v1.18.19
 )
