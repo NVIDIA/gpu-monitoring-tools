@@ -1,4 +1,7 @@
-# FINAL UPDATE: August 2021 - This repository has been deprecated. 
+# FINAL UPDATE: August 2021 - This repository has been deprecated.
+
+This repository has been deprecated with the underlying components moved to their own repositories as noted below. The repository has also been archived; setting it to readonly.
+
 ## The projects have been moved to their own repositories:
 
 - [NVML Go bindings](https://www.github.com/NVIDIA/go-nvml)
